@@ -49,7 +49,11 @@ func (u *UserAuthController) Login(c *gin.Context) {
 
 	userRes, err := u.authService.Login(createReq)
 	if err != nil {
-		utils.RespondWithError(c, http.StatusInternalServerError, err.Error())
+		if err.Error() == "invalid credentials" {
+			utils.RespondWithError(c, http.StatusUnauthorized, err.Error())
+		} else {
+			utils.RespondWithError(c, http.StatusInternalServerError, err.Error())
+		}
 		return
 	}
 	utils.RespondWithSuccess(c, http.StatusOK, userRes)

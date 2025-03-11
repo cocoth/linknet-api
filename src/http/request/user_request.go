@@ -21,6 +21,7 @@ type RegisterUserRequest struct {
 
 type LoginUserRequest struct {
 	Email    string `json:"email"`
+	Phone    string `json:"phone"`
 	Password string `validate:"min=8" json:"password"`
 }
 

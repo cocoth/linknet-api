@@ -23,6 +23,8 @@ func init() {
 func main() {
 	options.Opt()
 	r := gin.Default()
+	// r.Use(gin.Logger())
+	// r.Use(gin.Recovery())
 
 	db := config.DB
 	validate := validator.New()
