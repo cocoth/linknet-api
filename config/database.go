@@ -37,11 +37,25 @@ func ConnectToDB() {
 		utils.ErrPanic(err)
 	}
 
-	DB.AutoMigrate(&models.User{}, &models.Role{}, &models.Permission{}, &models.RolePermission{})
+	DB.AutoMigrate(&models.User{}, &models.Role{})
+}
+
+func RoleSeeder() {
+	roles := []models.Role{
+		{Name: "user"},
+		{Name: "admin"},
+	}
+	for _, role := range roles {
+		var existing models.Role
+		DB.First(&existing, "name = ?", role.Name)
+		if existing.ID != 0 {
+			DB.Create(&role)
+		}
+	}
 }
 
 func DropTables() {
-	err := DB.Migrator().DropTable(&models.User{}, &models.Role{}, &models.Permission{}, &models.RolePermission{})
+	err := DB.Migrator().DropTable(&models.User{}, &models.Role{})
 	if err != nil {
 		utils.Error("Failed to drop tables", "DropTables")
 		utils.ErrPanic(err)

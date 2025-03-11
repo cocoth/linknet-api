@@ -30,9 +30,14 @@ func main() {
 	v1 := r.Group("/api/v1")
 
 	userRepo := repo.NewUserRepoImpl(db)
-	userService := services.NewUserServiceImpl(userRepo, validate)
-	userCtrl := controllers.NewUserController(userService)
 
+	userService := services.NewUserServiceImpl(userRepo, validate)
+	authService := services.NewAuthService(userRepo)
+
+	userCtrl := controllers.NewUserController(userService)
+	authCtrl := controllers.NewAuthController(authService)
+
+	routes.AuthRoute(authCtrl, v1)
 	routes.UserRoute(userCtrl, v1)
 
 	host, port := os.Getenv("APP_HOST"), os.Getenv("APP_PORT")

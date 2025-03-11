@@ -4,11 +4,11 @@ import (
 	"errors"
 
 	"github.com/cocoth/linknet-api/config/models"
-	"github.com/cocoth/linknet-api/src/data/request"
-	"github.com/cocoth/linknet-api/src/data/response"
+	"github.com/cocoth/linknet-api/src/http/request"
+	"github.com/cocoth/linknet-api/src/http/response"
 	"github.com/cocoth/linknet-api/src/repo"
-	"github.com/cocoth/linknet-api/src/utils"
 	"github.com/go-playground/validator/v10"
+	"gorm.io/gorm"
 )
 
 type UsersServiceImpl struct {
@@ -16,60 +16,93 @@ type UsersServiceImpl struct {
 	Validate *validator.Validate
 }
 
+func sendUserResponseponse(userModel models.User, err error) (response.UserResponse, error) {
+	if err != nil {
+		return response.UserResponse{}, err
+	}
+	var roleName string
+	if userModel.Role != nil {
+		roleName = userModel.Role.Name
+	}
+	return response.UserResponse{
+		Id:    userModel.Id,
+		Name:  userModel.Name,
+		Email: userModel.Email,
+		Phone: userModel.Phone,
+		Role:  &response.RoleResponse{Name: roleName},
+	}, nil
+}
+
 // Create implements UserService.
-func (u *UsersServiceImpl) Create(users request.CreateUserReq) (response.UserRes, error) {
+func (u *UsersServiceImpl) Create(users request.CreateUserRequest) (response.UserResponse, error) {
 	err := u.Validate.Struct(users)
 	if err != nil {
-		return response.UserRes{}, err
+		return response.UserResponse{}, err
 	}
 
-	existingUser, err := u.UserRepo.FindUserByEmail(users.Email)
-	if err == nil && existingUser.Id != "" {
-		return response.UserRes{}, errors.New("email already exists")
+	_, findEmailErr := u.UserRepo.GetUserByEmail(users.Email)
+	if findEmailErr == nil {
+		return response.UserResponse{}, errors.New("user with that email already exists")
+	} else if !errors.Is(findEmailErr, gorm.ErrRecordNotFound) {
+		return response.UserResponse{}, findEmailErr
+	}
+
+	_, findPhoneErr := u.UserRepo.GetUserByPhone(users.Phone)
+	if findPhoneErr == nil {
+		return response.UserResponse{}, errors.New("user with that phone already exists")
+	} else if !errors.Is(findPhoneErr, gorm.ErrRecordNotFound) {
+		return response.UserResponse{}, findPhoneErr
 	}
 
 	userModel := models.User{
 		Name:     users.Name,
 		Email:    users.Email,
+		Phone:    users.Phone,
 		Password: users.Password,
-		// Role: models.Role{
-		// 	Name: users.Role.Name,
-		// },
+		Role: &models.Role{
+			Name: users.Role.Name,
+		},
 	}
+
 	var role models.Role
 	if err := u.UserRepo.GetOrCreateRole(users.Role.Name, &role); err != nil {
-		utils.ErrPanic(err)
-		return response.UserRes{}, err
+		return response.UserResponse{}, err
+	}
 
+	userModel.RoleID = &role.ID
+
+	user, err := u.UserRepo.Create(userModel)
+	if err != nil {
+		return response.UserResponse{}, err
 	}
-	userModel.Role = role
-	if _, err := u.UserRepo.Create(userModel); err != nil {
-		return response.UserRes{}, err
-	}
-	return response.UserRes{
-		Id:    userModel.Id,
-		Name:  userModel.Name,
-		Email: userModel.Email,
-		Role:  userModel.Role.Name,
-	}, nil
+
+	return sendUserResponseponse(user, nil)
 }
 
 // Delete implements UserService.
 func (u *UsersServiceImpl) Delete(id string) error {
-	u.UserRepo.Delete(id)
-	return nil
+	err := u.UserRepo.Delete(id)
+	return err
 }
 
 // GetAll implements UserService.
-func (u *UsersServiceImpl) GetAll() ([]response.UserRes, error) {
+func (u *UsersServiceImpl) GetAll() ([]response.UserResponse, error) {
 	result := u.UserRepo.GetAll()
-	var users []response.UserRes
+	var users []response.UserResponse
+
 	for _, user := range result {
-		users = append(users, response.UserRes{
+		var roleResp *response.RoleResponse
+		if user.Role != nil {
+			roleResp = &response.RoleResponse{
+				Name: user.Role.Name,
+			}
+		}
+		users = append(users, response.UserResponse{
 			Id:    user.Id,
 			Name:  user.Name,
 			Email: user.Email,
-			Role:  user.Role.Name,
+			Phone: user.Phone,
+			Role:  roleResp,
 		})
 	}
 
@@ -77,25 +110,18 @@ func (u *UsersServiceImpl) GetAll() ([]response.UserRes, error) {
 }
 
 // GetById implements UserService.
-func (u *UsersServiceImpl) GetById(id string) (response.UserRes, error) {
-	user := u.UserRepo.GetById(id)
-	return response.UserRes{
-		Name:  user.Name,
-		Email: user.Email,
-	}, nil
+func (u *UsersServiceImpl) GetById(id string) (response.UserResponse, error) {
+	user, err := u.UserRepo.GetById(id)
+	return sendUserResponseponse(user, err)
 }
 
 // Update implements UserService.
-func (u *UsersServiceImpl) Update(users request.UpdateUserReq) (response.UserRes, error) {
-	user := u.UserRepo.GetById(users.Id)
+func (u *UsersServiceImpl) Update(users request.UpdateUserRequest) (response.UserResponse, error) {
+	user, err := u.UserRepo.GetById(users.Id)
 	user.Name = users.Name
 	user.Email = users.Email
 	u.UserRepo.Update(user)
-	return response.UserRes{
-		Name:  user.Name,
-		Email: user.Email,
-		Role:  user.Role.Name,
-	}, nil
+	return sendUserResponseponse(user, err)
 
 }
 

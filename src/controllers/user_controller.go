@@ -3,8 +3,8 @@ package controllers
 import (
 	"net/http"
 
-	"github.com/cocoth/linknet-api/src/data/request"
-	"github.com/cocoth/linknet-api/src/data/response"
+	"github.com/cocoth/linknet-api/src/controllers/utils"
+	"github.com/cocoth/linknet-api/src/http/request"
 	"github.com/cocoth/linknet-api/src/services"
 	"github.com/gin-gonic/gin"
 )
@@ -19,51 +19,32 @@ func NewUserController(service services.UserService) *UserController {
 	}
 }
 
-func (u *UserController) respondWithError(c *gin.Context, code int, message string) {
-	c.JSON(code, response.WebResponse{
-		Code:    code,
-		Status:  "Error",
-		Message: message,
-		Data:    nil,
-	})
-}
-
-func (u *UserController) respondWithSuccess(c *gin.Context, code int, data interface{}) {
-	c.JSON(code, response.WebResponse{
-		Code:    code,
-		Status:  "Ok",
-		Message: "",
-		Data:    data,
-	})
-}
-
 func (u *UserController) Create(c *gin.Context) {
-	var createReq request.CreateUserReq
+	var createReq request.CreateUserRequest
 
 	if err := c.ShouldBindJSON(&createReq); err != nil {
-		u.respondWithError(c, http.StatusBadRequest, err.Error())
+		utils.RespondWithError(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	userRes, err := u.userService.Create(createReq)
 	if err != nil {
-		if err.Error() == "Email already exists" {
-			u.respondWithError(c, http.StatusBadRequest, err.Error())
-			return
+		if err.Error() == "email already exists" {
+			utils.RespondWithError(c, http.StatusConflict, err.Error())
 		} else {
-			u.respondWithError(c, http.StatusInternalServerError, err.Error())
-			return
+			utils.RespondWithError(c, http.StatusInternalServerError, err.Error())
 		}
+		return
 	}
 
-	u.respondWithSuccess(c, http.StatusOK, userRes)
+	utils.RespondWithSuccess(c, http.StatusOK, userRes)
 }
 
 func (u *UserController) Update(c *gin.Context) {
-	var updateUserReq request.UpdateUserReq
+	var updateUserReq request.UpdateUserRequest
 
 	if err := c.ShouldBindJSON(&updateUserReq); err != nil {
-		u.respondWithError(c, http.StatusBadRequest, err.Error())
+		utils.RespondWithError(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -71,11 +52,9 @@ func (u *UserController) Update(c *gin.Context) {
 	updateUserReq.Id = id
 
 	if _, err := u.userService.Update(updateUserReq); err != nil {
-		u.respondWithError(c, http.StatusInternalServerError, err.Error())
+		utils.RespondWithError(c, http.StatusInternalServerError, err.Error())
 		return
 	}
-
-	u.respondWithSuccess(c, http.StatusOK, nil)
 }
 
 func (u *UserController) Delete(c *gin.Context) {
@@ -83,21 +62,25 @@ func (u *UserController) Delete(c *gin.Context) {
 
 	err := u.userService.Delete(id)
 	if err != nil {
-		u.respondWithError(c, http.StatusInternalServerError, err.Error())
+		if err.Error() == "record not found" {
+			utils.RespondWithError(c, http.StatusNotFound, "not found")
+		} else {
+			utils.RespondWithError(c, http.StatusInternalServerError, err.Error())
+		}
 		return
 	}
 
-	u.respondWithSuccess(c, http.StatusOK, nil)
+	utils.RespondWithSuccess(c, http.StatusOK, nil)
 }
 
 func (u *UserController) GetAll(c *gin.Context) {
 	users, err := u.userService.GetAll()
 	if err != nil {
-		u.respondWithError(c, http.StatusInternalServerError, err.Error())
+		utils.RespondWithError(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	u.respondWithSuccess(c, http.StatusOK, users)
+	utils.RespondWithSuccess(c, http.StatusOK, users)
 }
 
 func (u *UserController) GetById(c *gin.Context) {
@@ -105,9 +88,13 @@ func (u *UserController) GetById(c *gin.Context) {
 
 	user, err := u.userService.GetById(id)
 	if err != nil {
-		u.respondWithError(c, http.StatusInternalServerError, err.Error())
+		if err.Error() == "record not found" {
+			utils.RespondWithError(c, http.StatusNotFound, "user not found")
+		} else {
+			utils.RespondWithError(c, http.StatusInternalServerError, err.Error())
+		}
 		return
 	}
 
-	u.respondWithSuccess(c, http.StatusOK, user)
+	utils.RespondWithSuccess(c, http.StatusOK, user)
 }

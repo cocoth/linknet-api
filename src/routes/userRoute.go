@@ -19,3 +19,12 @@ func UserRoute(ctrl *controllers.UserController, rg *gin.RouterGroup) {
 	// Dele user
 	rg.DELETE("/user/:id", ctrl.Delete)
 }
+
+func AuthRoute(ctrl *controllers.UserAuthController, rg *gin.RouterGroup) {
+	// Register new user
+	rg.POST("/register", ctrl.Register)
+	// Login
+	rg.POST("/login", ctrl.Login)
+	// Logout
+	// rg.POST("/logout", ctrl.Logout)
+}
