@@ -46,9 +46,10 @@ func main() {
 	if env == "prod" {
 		gin.SetMode(gin.ReleaseMode)
 		host = "0.0.0.0"
-	} else {
+	} else if env == "dev-docker" {
 		host = "0.0.0.0"
-
+	} else {
+		host = "localhost"
 	}
 
 	server := host + ":" + port
