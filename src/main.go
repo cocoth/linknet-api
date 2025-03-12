@@ -23,8 +23,6 @@ func init() {
 func main() {
 	options.Opt()
 	r := gin.Default()
-	// r.Use(gin.Logger())
-	// r.Use(gin.Recovery())
 
 	db := config.DB
 	validate := validator.New()
@@ -42,8 +40,19 @@ func main() {
 	routes.AuthRoute(authCtrl, v1)
 	routes.UserRoute(userCtrl, v1)
 
-	host, port := os.Getenv("APP_HOST"), os.Getenv("APP_PORT")
-	server := host + ":" + port
+	env, port := os.Getenv("APP_ENV"), os.Getenv("APP_PORT")
+	var host string
 
-	r.Run(server)
+	if env == "prod" {
+		gin.SetMode(gin.ReleaseMode)
+		host = "0.0.0.0"
+	} else {
+		host = "0.0.0.0"
+
+	}
+
+	server := host + ":" + port
+	if err := r.Run(server); err != nil {
+		panic(err)
+	}
 }

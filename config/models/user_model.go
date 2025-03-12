@@ -10,7 +10,7 @@ import (
 )
 
 type User struct {
-	Id         string `gorm:"type:uuid;primaryKey" json:"id"`
+	Id         string `gorm:"type:varchar(36);primaryKey" json:"id"`
 	Name       string `gorm:"not null" json:"name"`
 	Email      string `gorm:"unique;not null" json:"email"`
 	Phone      string `gorm:"unique;not null" json:"phone"`
@@ -19,7 +19,7 @@ type User struct {
 	Role       *Role  `gorm:"foreignKey:RoleID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"role"`
 	CreatedAt  time.Time
 	UpdatedAt  time.Time
-	Deleted_at time.Time `gorm:"index"`
+	Deleted_at *time.Time `gorm:"index"`
 }
 
 func (user *User) BeforeCreate(tx *gorm.DB) error {

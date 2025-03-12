@@ -1,0 +1,63 @@
+
+
+networks:
+  linknet-networks:
+    driver: bridge
+
+services:
+  app:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    image: golang:1.23.1
+    container_name: linknet-api
+    networks:
+      - linknet-networks
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT}:${APP_PORT}"
+    depends_on:
+      - db_mysql
+    env_file:
+      - .env
+    environment:
+      DB_HOST: db_mysql
+      # APP_ENV: "prod"
+
+    working_dir: /app/
+    volumes:
+      - .:/app/
+    command: go run ./src/main.go
+
+  db_mysql:
+    image: mysql
+    container_name: linknet-db
+    networks:
+      - linknet-networks
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: "${DB_PASS}"
+      MYSQL_DATABASE: "${DB_NAME}"
+      MYSQL_USER: "${DB_USER}"
+      MYSQL_PASSWORD: "${DB_PASS}"
+    volumes:
+      - db_data:/var/lib/mysql
+
+  db_pg:
+    image: postgres:16
+    container_name: linknet-db
+    networks:
+      - linknet-networks
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: linknet
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+volumes:
+  db_data:

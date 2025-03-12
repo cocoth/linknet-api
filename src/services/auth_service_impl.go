@@ -55,7 +55,6 @@ func (u *UserAuthServiceImpl) Login(users request.LoginUserRequest) (response.Lo
 	// Try to find user by email
 	user, err = u.UserRepo.GetUserByEmail(users.Email)
 	if err != nil && errors.Is(err, gorm.ErrRecordNotFound) {
-		// If not found by email, try to find user by phone
 		user, err = u.UserRepo.GetUserByPhone(users.Phone)
 		if err != nil {
 			return response.LoginUserResponse{}, err
@@ -72,7 +71,6 @@ func (u *UserAuthServiceImpl) Login(users request.LoginUserRequest) (response.Lo
 		return response.LoginUserResponse{}, errors.New("invalid credentials")
 	}
 
-	// Generate token (assuming you have a function to generate a token)
 	token := utils.GenerateJWTToken(user.Id)
 	return response.LoginUserResponse{
 		Id:    user.Id,

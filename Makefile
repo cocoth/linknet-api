@@ -1,4 +1,4 @@
-APP_NAME = linknet-smg-api
+APP_NAME = linknet-api
 CURRENT_DIR := $(shell pwd)
 BUILD_DIR = $(CURRENT_DIR)/build
 
