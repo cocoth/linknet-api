@@ -1,9 +1,13 @@
 package request
 
 type UpdateUserRequest struct {
-	Id       string `validate:"required,uuid" binding:"required,uuid" json:"id"`
-	Name     string `validate:"required,min=1,max=200" binding:"required,min=1,max=200" json:"name"`
-	Password string `validate:"min=8" binding:"min=8" json:"password,omitempty"`
-	Email    string `json:"email,omitempty"`
-	RoleID   uint   `json:"role_id,omitempty"`
+	Name       *string `json:"name,omitempty" validate:"omitempty,min=1,max=200"`
+	Password   *string `json:"password,omitempty" validate:"min=8"`
+	Email      *string `json:"email,omitempty"`
+	Phone      *string `json:"phone,omitempty"`
+	CallSign   *string `json:"call_sign,omitempty"`
+	Contractor *string `json:"contractor,omitempty"`
+	Status     *string `json:"status,omitempty"`
+
+	Role *RoleRequest `json:"role,omitempty"`
 }

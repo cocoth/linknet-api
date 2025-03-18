@@ -6,21 +6,26 @@ import (
 )
 
 type UserService interface {
+	GetUsersByName(name string) ([]response.UserResponse, error)
+	GetUsersByEmail(email string) ([]response.UserResponse, error)
+	GetUsersByPhone(phone string) ([]response.UserResponse, error)
+	GetUsersByRole(role string) ([]response.UserResponse, error)
+	GetUsersByStatus(status string) ([]response.UserResponse, error)
+	GetUsersByContractor(contractor string) ([]response.UserResponse, error)
+
+	IsAdmin(token string) (bool, error)
+	GetAllRole() ([]response.RoleResponse, error)
+	CreateRole(role request.RoleRequest) (response.RoleResponse, error)
 	GetAll() ([]response.UserResponse, error)
 	GetById(id string) (response.UserResponse, error)
-	Create(users request.CreateUserRequest) (response.UserResponse, error)
-	Update(users request.UpdateUserRequest) (response.UserResponse, error)
-	Delete(id string) error
-	// TODO!
-	// GetByEmail(users request.GetUserByEmailReq) (request.CreateUserReq, error)
-	// GetByPhone(users request.GetUserByPhoneReq) (request.CreateUserReq, error)
-	// GetByRole(users request.GetUserByRoleReq) ([]request.CreateUserReq, error)
-	// GetByStatus(users request.GetUserByStatusReq) ([]request.CreateUserReq, error)
+	Create(user request.UserRequest) (response.UserResponse, error)
+	Update(id string, user request.UpdateUserRequest) (response.UserResponse, error)
+	Delete(id string) (response.UserResponse, error)
 }
 
 type UserAuthService interface {
-	Register(users request.RegisterUserRequest) (response.RegisterUserResponse, error)
+	Register(user request.RegisterUserRequest) (response.RegisterUserResponse, error)
 	Login(users request.LoginUserRequest) (response.LoginUserResponse, error)
 	Logout(users request.LogoutUserRequest) error
-	RefreshToken(users request.RefreshTokenRequest) (response.RefreshTokenResponse, error)
+	Validate(token string) (response.LoginUserResponse, error)
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/cocoth/linknet-api/config"
 	"github.com/cocoth/linknet-api/config/options"
 	"github.com/cocoth/linknet-api/src/controllers"
+	"github.com/cocoth/linknet-api/src/http/middleware"
 	"github.com/cocoth/linknet-api/src/repo"
 	"github.com/cocoth/linknet-api/src/routes"
 	"github.com/cocoth/linknet-api/src/services"
@@ -20,26 +21,7 @@ func init() {
 	config.ConnectToDB()
 }
 
-func main() {
-	options.Opt()
-	r := gin.Default()
-
-	db := config.DB
-	validate := validator.New()
-
-	v1 := r.Group("/api/v1")
-
-	userRepo := repo.NewUserRepoImpl(db)
-
-	userService := services.NewUserServiceImpl(userRepo, validate)
-	authService := services.NewAuthService(userRepo)
-
-	userCtrl := controllers.NewUserController(userService)
-	authCtrl := controllers.NewAuthController(authService)
-
-	routes.AuthRoute(authCtrl, v1)
-	routes.UserRoute(userCtrl, v1)
-
+func runServer(e *gin.Engine) {
 	env, port := os.Getenv("APP_ENV"), os.Getenv("APP_PORT")
 	var host string
 
@@ -49,11 +31,35 @@ func main() {
 	} else if env == "dev-docker" {
 		host = "0.0.0.0"
 	} else {
-		host = "localhost"
+		host = os.Getenv("APP_HOST")
 	}
-
 	server := host + ":" + port
-	if err := r.Run(server); err != nil {
+	if err := e.Run(server); err != nil {
 		panic(err)
 	}
+}
+
+func main() {
+	db := config.DB
+
+	options.Opt(db)
+	r := gin.Default()
+
+	validate := validator.New()
+
+	v1 := r.Group("/api/v1")
+
+	userRepo := repo.NewUserRepoImpl(db)
+
+	userService := services.NewUserServiceImpl(userRepo, validate)
+	authService := services.NewAuthService(userRepo)
+	authMiddleware := middleware.NewUserAuthorization(userService)
+
+	userCtrl := controllers.NewUserController(userService)
+	authCtrl := controllers.NewAuthController(authService)
+
+	routes.AuthRoute(authMiddleware, authCtrl, v1)
+	routes.UserRoute(userCtrl, v1)
+
+	runServer(r)
 }

@@ -1,8 +1,11 @@
 package utils
 
 import (
+	"net/http"
+
 	"github.com/cocoth/linknet-api/src/http/response"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 func RespondWithError(c *gin.Context, code int, message string) {
@@ -21,4 +24,19 @@ func RespondWithSuccess(c *gin.Context, code int, data interface{}) {
 		Message: "",
 		Data:    data,
 	})
+}
+
+func HandleGormError(c *gin.Context, err error) {
+	if err == nil {
+		return
+	}
+
+	switch err {
+	case gorm.ErrRecordNotFound:
+		RespondWithError(c, http.StatusNotFound, "record not found")
+	case gorm.ErrInvalidData:
+		RespondWithError(c, http.StatusBadRequest, "invalid data")
+	default:
+		RespondWithError(c, http.StatusInternalServerError, err.Error())
+	}
 }

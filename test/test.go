@@ -1,13 +1,24 @@
 package main
 
-import "github.com/cocoth/linknet-api/src/utils"
+import (
+	"fmt"
+
+	"github.com/cocoth/linknet-api/src/utils"
+)
+
+type user struct {
+	Name string
+}
 
 func main() {
-	errPass := utils.CompareHashPassword([]byte("11111111"), "$2a$10$iVXrf6oM3N5BSiWH6.dMmune6aB8qGcYW6TNoo4eiQ6dlr4AWj.L2db")
-	if errPass != nil {
+	var users user
+	users.Name = "Coco"
 
-		utils.Debug(errPass.Error())
-	}
+	addr := &users.Name
+	*addr = "Coco1"
+	*addr = "Coco2"
+	// addr.Name = "Coco2"
 
-	utils.Info("password matched")
+	fmt.Println(addr)
+	utils.Info(users.Name)
 }

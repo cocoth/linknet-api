@@ -1,11 +1,19 @@
 package response
 
+import "time"
+
 type UserResponse struct {
-	Id    string        `json:"id"`
-	Name  string        `json:"name"`
-	Email string        `json:"email"`
-	Phone string        `json:"phone"`
-	Role  *RoleResponse `json:"role"`
+	Id         string        `json:"id"`
+	Name       string        `json:"name"`
+	Email      string        `json:"email"`
+	Phone      string        `json:"phone"`
+	CallSign   *string       `json:"call_sign"`
+	Contractor *string       `json:"contractor"`
+	Status     *string       `json:"status"`
+	Role       *RoleResponse `json:"role"`
+	CreatedAt  time.Time     `json:"CreatedAt"`
+	UpdatedAt  time.Time     `json:"UpdatedAt"`
+	DeletedAt  *time.Time    `json:"DeletedAt"`
 }
 
 type RoleResponse struct {
@@ -17,8 +25,9 @@ type RegisterUserResponse struct {
 }
 
 type LoginUserResponse struct {
-	Id    string `json:"user_id"`
-	Token string `json:"token"`
+	Id           string `json:"user_id"`
+	SessionToken string `json:"session_token"`
+	CsrfToken    string `json:"csrf_token"`
 }
 
 type RefreshTokenResponse struct {

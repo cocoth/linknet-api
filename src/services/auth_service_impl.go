@@ -16,34 +16,69 @@ type UserAuthServiceImpl struct {
 }
 
 // Register implements UserAuth.
-func (u *UserAuthServiceImpl) Register(users request.RegisterUserRequest) (response.RegisterUserResponse, error) {
+func (u *UserAuthServiceImpl) Register(user request.RegisterUserRequest) (response.RegisterUserResponse, error) {
+	user.Name = utils.SanitizeString(user.Name)
+	user.Email = utils.SanitizeString(user.Email)
+	user.Phone = utils.SanitizeString(user.Phone)
+	if user.CallSign != nil {
+		sanitizedCallSign := utils.SanitizeString(*user.CallSign)
+		user.CallSign = &sanitizedCallSign
+	}
+	if user.Contractor != nil {
+		sanitizeContractor := utils.SanitizeString(*user.Contractor)
+		user.CallSign = &sanitizeContractor
+	}
 
-	_, findEmailErr := u.UserRepo.GetUserByEmail(users.Email)
+	if !utils.ValidateEmail(user.Email) {
+		return response.RegisterUserResponse{}, errors.New("invalid email")
+	}
+
+	_, findEmailErr := u.UserRepo.GetUserByEmail(user.Email)
 	if findEmailErr == nil {
 		return response.RegisterUserResponse{}, errors.New("user with that email already exists")
 	} else if !errors.Is(findEmailErr, gorm.ErrRecordNotFound) {
 		return response.RegisterUserResponse{}, findEmailErr
 	}
 
-	_, findPhoneErr := u.UserRepo.GetUserByPhone(users.Phone)
+	_, findPhoneErr := u.UserRepo.GetUserByPhone(user.Phone)
 	if findPhoneErr == nil {
 		return response.RegisterUserResponse{}, errors.New("user with that phone already exists")
 	} else if !errors.Is(findPhoneErr, gorm.ErrRecordNotFound) {
 		return response.RegisterUserResponse{}, findPhoneErr
 	}
 	userModel := models.User{
-		Name:     users.Name,
-		Email:    users.Email,
-		Phone:    users.Phone,
-		Password: users.Password,
+		Name:       user.Name,
+		Email:      user.Email,
+		Phone:      user.Phone,
+		Password:   user.Password,
+		CallSign:   user.CallSign,
+		Contractor: user.Contractor,
+		Status:     func(s string) *string { return &s }("active"),
 	}
 
-	user, err := u.UserRepo.Create(userModel)
+	// Set default role to "user"
+	role, err := u.UserRepo.GetRoleByRoleName("user")
+	if err != nil {
+		return response.RegisterUserResponse{}, err
+	}
+	userModel.Role = &role
+	userModel.RoleID = &role.ID
+
+	if user.Role != nil && user.Role.Name != "" {
+		role, err := u.UserRepo.GetRoleByRoleName(user.Role.Name)
+		if err != nil {
+			return response.RegisterUserResponse{}, err
+		}
+		userModel.Role = &role
+		userModel.RoleID = &role.ID
+	}
+
+	userCreated, err := u.UserRepo.Create(userModel)
 	if err != nil {
 		return response.RegisterUserResponse{}, err
 	}
 	return response.RegisterUserResponse{
-		Id: user.Id,
+		Id: userCreated.ID,
 	}, nil
 }
 
@@ -64,28 +99,41 @@ func (u *UserAuthServiceImpl) Login(users request.LoginUserRequest) (response.Lo
 	}
 
 	// Generate token
-	errPass := utils.CompareHashPassword([]byte(users.Password), user.Password)
+	errPass := utils.CompareHashPassword(users.Password, user.Password)
 	if errPass != nil {
-		a := "error pass" + errPass.Error()
-		utils.Error(a)
 		return response.LoginUserResponse{}, errors.New("invalid credentials")
 	}
 
-	token := utils.GenerateJWTToken(user.Id)
+	token := utils.GenerateJWTToken(user.ID)
+	csrfToken := utils.GenerateCSRFToken(32)
+
 	return response.LoginUserResponse{
-		Id:    user.Id,
-		Token: token,
+		Id:           user.ID,
+		SessionToken: token,
+		CsrfToken:    csrfToken,
 	}, nil
 }
 
 // Logout implements UserAuth.
 func (u *UserAuthServiceImpl) Logout(users request.LogoutUserRequest) error {
-	panic("unimplemented")
+	return nil
 }
 
-// RefreshToken implements UserAuth.
-func (u *UserAuthServiceImpl) RefreshToken(users request.RefreshTokenRequest) (response.RefreshTokenResponse, error) {
-	panic("unimplemented")
+// Validate implements UserAuthService.
+func (u *UserAuthServiceImpl) Validate(userId string) (response.LoginUserResponse, error) {
+	user, err := u.UserRepo.GetById(userId)
+	if err != nil {
+		return response.LoginUserResponse{}, err
+	}
+
+	token := utils.GenerateJWTToken(user.ID)
+	csrf := utils.GenerateCSRFToken(32)
+
+	return response.LoginUserResponse{
+		Id:           user.ID,
+		SessionToken: token,
+		CsrfToken:    csrf,
+	}, nil
 }
 
 func NewAuthService(userRepo repo.UserRepo) UserAuthService {

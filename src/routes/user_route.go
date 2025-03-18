@@ -2,6 +2,7 @@ package routes
 
 import (
 	"github.com/cocoth/linknet-api/src/controllers"
+	"github.com/cocoth/linknet-api/src/http/middleware"
 
 	"github.com/gin-gonic/gin"
 )
@@ -15,16 +16,23 @@ func UserRoute(ctrl *controllers.UserController, rg *gin.RouterGroup) {
 	// Add new user
 	rg.POST("/user", ctrl.Create)
 	// Update Existing user
-	rg.PUT("/user/:id", ctrl.Update)
-	// Dele user
+	rg.PATCH("/user/:id", ctrl.Update)
+	// Delete user
 	rg.DELETE("/user/:id", ctrl.Delete)
+
+	// Get all roles
+	rg.GET("/user/roles", ctrl.GetAllRole)
+	// Add new role
+	rg.POST("/user/role", ctrl.CreateRole)
 }
 
-func AuthRoute(ctrl *controllers.UserAuthController, rg *gin.RouterGroup) {
+func AuthRoute(authMiddleware *middleware.UserAuthorization, ctrl *controllers.UserAuthController, rg *gin.RouterGroup) {
 	// Register new user
 	rg.POST("/register", ctrl.Register)
 	// Login
 	rg.POST("/login", ctrl.Login)
 	// Logout
-	// rg.POST("/logout", ctrl.Logout)
+	rg.POST("/logout", ctrl.Logout)
+
+	rg.GET("/validate", authMiddleware.Authorize, ctrl.Validate)
 }
