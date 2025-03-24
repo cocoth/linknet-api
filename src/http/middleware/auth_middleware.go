@@ -3,7 +3,7 @@ package middleware
 import (
 	"time"
 
-	ctrlUtils "github.com/cocoth/linknet-api/src/controllers/utils"
+	ctrlUtils "github.com/cocoth/linknet-api/src/controllers/helper"
 	"github.com/cocoth/linknet-api/src/services"
 	generalUtils "github.com/cocoth/linknet-api/src/utils"
 	"github.com/gin-gonic/gin"
@@ -52,7 +52,7 @@ func (u *UserAuthorization) Authorize(c *gin.Context) {
 		return
 	}
 
-	user, err := u.authService.GetById(userId)
+	user, err := u.authService.GetUserById(userId)
 	if err != nil {
 		ctrlUtils.RespondWithError(c, 401, "Unauthorized")
 		c.Abort()

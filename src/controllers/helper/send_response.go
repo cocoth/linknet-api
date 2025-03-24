@@ -1,4 +1,4 @@
-package utils
+package helper
 
 import (
 	"net/http"
@@ -34,8 +34,8 @@ func HandleGormError(c *gin.Context, err error) {
 	switch err {
 	case gorm.ErrRecordNotFound:
 		RespondWithError(c, http.StatusNotFound, "record not found")
-	case gorm.ErrInvalidData:
-		RespondWithError(c, http.StatusBadRequest, "invalid data")
+	case gorm.ErrDuplicatedKey:
+		RespondWithError(c, http.StatusConflict, err.Error())
 	default:
 		RespondWithError(c, http.StatusInternalServerError, err.Error())
 	}

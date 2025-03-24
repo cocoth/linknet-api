@@ -3,9 +3,9 @@ package services
 import (
 	"errors"
 
-	"github.com/cocoth/linknet-api/config/models"
 	"github.com/cocoth/linknet-api/src/http/request"
 	"github.com/cocoth/linknet-api/src/http/response"
+	"github.com/cocoth/linknet-api/src/models"
 	"github.com/cocoth/linknet-api/src/repo"
 	"github.com/cocoth/linknet-api/src/utils"
 	"gorm.io/gorm"
@@ -20,13 +20,13 @@ func (u *UserAuthServiceImpl) Register(user request.RegisterUserRequest) (respon
 	user.Name = utils.SanitizeString(user.Name)
 	user.Email = utils.SanitizeString(user.Email)
 	user.Phone = utils.SanitizeString(user.Phone)
-	if user.CallSign != nil {
-		sanitizedCallSign := utils.SanitizeString(*user.CallSign)
-		user.CallSign = &sanitizedCallSign
+	if user.CallSign != "" {
+		sanitizedCallSign := utils.SanitizeString(user.CallSign)
+		user.CallSign = sanitizedCallSign
 	}
 	if user.Contractor != nil {
 		sanitizeContractor := utils.SanitizeString(*user.Contractor)
-		user.CallSign = &sanitizeContractor
+		user.Contractor = &sanitizeContractor
 	}
 
 	if !utils.ValidateEmail(user.Email) {
@@ -64,21 +64,12 @@ func (u *UserAuthServiceImpl) Register(user request.RegisterUserRequest) (respon
 	userModel.Role = &role
 	userModel.RoleID = &role.ID
 
-	if user.Role != nil && user.Role.Name != "" {
-		role, err := u.UserRepo.GetRoleByRoleName(user.Role.Name)
-		if err != nil {
-			return response.RegisterUserResponse{}, err
-		}
-		userModel.Role = &role
-		userModel.RoleID = &role.ID
-	}
-
-	userCreated, err := u.UserRepo.Create(userModel)
+	userCreated, err := u.UserRepo.CreateUser(userModel)
 	if err != nil {
 		return response.RegisterUserResponse{}, err
 	}
 	return response.RegisterUserResponse{
-		Id: userCreated.ID,
+		ID: userCreated.ID,
 	}, nil
 }
 
@@ -108,7 +99,7 @@ func (u *UserAuthServiceImpl) Login(users request.LoginUserRequest) (response.Lo
 	csrfToken := utils.GenerateCSRFToken(32)
 
 	return response.LoginUserResponse{
-		Id:           user.ID,
+		ID:           user.ID,
 		SessionToken: token,
 		CsrfToken:    csrfToken,
 	}, nil
@@ -121,7 +112,7 @@ func (u *UserAuthServiceImpl) Logout(users request.LogoutUserRequest) error {
 
 // Validate implements UserAuthService.
 func (u *UserAuthServiceImpl) Validate(userId string) (response.LoginUserResponse, error) {
-	user, err := u.UserRepo.GetById(userId)
+	user, err := u.UserRepo.GetUserById(userId)
 	if err != nil {
 		return response.LoginUserResponse{}, err
 	}
@@ -130,7 +121,7 @@ func (u *UserAuthServiceImpl) Validate(userId string) (response.LoginUserRespons
 	csrf := utils.GenerateCSRFToken(32)
 
 	return response.LoginUserResponse{
-		Id:           user.ID,
+		ID:           user.ID,
 		SessionToken: token,
 		CsrfToken:    csrf,
 	}, nil

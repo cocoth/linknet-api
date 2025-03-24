@@ -1,65 +1,58 @@
 package main
 
 import (
-	"os"
-
-	"github.com/cocoth/linknet-api/config"
-	"github.com/cocoth/linknet-api/config/options"
-	"github.com/cocoth/linknet-api/src/controllers"
-	"github.com/cocoth/linknet-api/src/http/middleware"
-	"github.com/cocoth/linknet-api/src/repo"
-	"github.com/cocoth/linknet-api/src/routes"
-	"github.com/cocoth/linknet-api/src/services"
+	"github.com/cocoth/linknet-api/cmd"
+	"github.com/cocoth/linknet-api/src/database"
 	"github.com/cocoth/linknet-api/src/utils"
-	"github.com/go-playground/validator/v10"
-
-	"github.com/gin-gonic/gin"
 )
 
 func init() {
 	utils.LoadEnv()
-	config.ConnectToDB()
+	database.ConnectToDB()
 }
 
-func runServer(e *gin.Engine) {
-	env, port := os.Getenv("APP_ENV"), os.Getenv("APP_PORT")
-	var host string
+// func runServer(e *gin.Engine) {
+// 	env, port := os.Getenv("APP_ENV"), os.Getenv("APP_PORT")
+// 	var host string
 
-	if env == "prod" {
-		gin.SetMode(gin.ReleaseMode)
-		host = "0.0.0.0"
-	} else if env == "dev-docker" {
-		host = "0.0.0.0"
-	} else {
-		host = os.Getenv("APP_HOST")
-	}
-	server := host + ":" + port
-	if err := e.Run(server); err != nil {
-		panic(err)
-	}
-}
+// 	if env == "prod" {
+// 		gin.SetMode(gin.ReleaseMode)
+// 		host = "0.0.0.0"
+// 	} else if env == "dev-docker" {
+// 		host = "0.0.0.0"
+// 	} else {
+// 		host = os.Getenv("APP_HOST")
+// 	}
+// 	server := host + ":" + port
+// 	if err := e.Run(server); err != nil {
+// 		utils.Error(err.Error(), "runServer")
+// 		os.Exit(1)
+// 	}
+// }
 
 func main() {
-	db := config.DB
+	// db := database.DB
 
-	options.Opt(db)
-	r := gin.Default()
+	// rootCmd := cmd.Opt(db)
+	cmd.Exec()
 
-	validate := validator.New()
+	// r := gin.Default()
 
-	v1 := r.Group("/api/v1")
+	// validate := validator.New()
 
-	userRepo := repo.NewUserRepoImpl(db)
+	// v1 := r.Group("/api/v1")
 
-	userService := services.NewUserServiceImpl(userRepo, validate)
-	authService := services.NewAuthService(userRepo)
-	authMiddleware := middleware.NewUserAuthorization(userService)
+	// userRepo := repo.NewUserRepoImpl(db)
 
-	userCtrl := controllers.NewUserController(userService)
-	authCtrl := controllers.NewAuthController(authService)
+	// userService := services.NewUserServiceImpl(userRepo, validate)
+	// authService := services.NewAuthService(userRepo)
+	// authMiddleware := middleware.NewUserAuthorization(userService)
 
-	routes.AuthRoute(authMiddleware, authCtrl, v1)
-	routes.UserRoute(userCtrl, v1)
+	// userCtrl := controllers.NewUserController(userService)
+	// authCtrl := controllers.NewAuthController(authService)
 
-	runServer(r)
+	// routes.AuthRoute(authMiddleware, authCtrl, v1)
+	// routes.UserRoute(userCtrl, v1)
+
+	// runServer(r)
 }

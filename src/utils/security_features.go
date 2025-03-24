@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
 	"errors"
 	"html"
 	"io"
@@ -77,14 +78,26 @@ func ValidateJWTToken(tokenstr string) (exp float64, userId string, err error) {
 	return exp, userId, nil
 }
 
-func CalculateHash(file io.Reader) (hash string, err error) {
+func CalculateHash(filePath string) (hash string, err error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
 	hasher := sha256.New()
 	if _, err := io.Copy(hasher, file); err != nil {
 		return "", err
 	}
 	hashBytes := hasher.Sum(nil)
-	return string(hashBytes), nil
-
+	return hex.EncodeToString(hashBytes), nil
+}
+func CalculateHashByBuffer(file io.Reader) string {
+	hash := sha256.New()
+	if _, err := io.Copy(hash, file); err != nil {
+		return ""
+	}
+	return hex.EncodeToString(hash.Sum(nil))
 }
 
 func SanitizeString(input string) string {

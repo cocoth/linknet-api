@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/cocoth/linknet-api/config/models"
+	"github.com/cocoth/linknet-api/src/models"
 	"gorm.io/gorm"
 )
 
@@ -44,6 +44,55 @@ func (u *userRepoImpl) GetOrCreateRole(name string, role *models.Role) error {
 		*role = existingRole
 	}
 	return nil
+}
+
+// UpdateRole implements UserRepo.
+func (u *userRepoImpl) UpdateRole(role models.Role) (models.Role, error) {
+	updatedRole := map[string]interface{}{}
+
+	if role.ID != 0 {
+		updatedRole["id"] = role.ID
+	} else if role.Name != "" {
+		updatedRole["name"] = role.Name
+	} else {
+		return role, nil
+	}
+
+	if len(updatedRole) == 0 {
+		return role, nil
+	}
+
+	result := u.Db.Model(&role).Where("id = ?", role.ID).Updates(updatedRole)
+	if result.Error != nil {
+		return role, result.Error
+	}
+
+	err := u.Db.Preload("Role").First(&role, "id = ?", role.ID).Error
+	if err != nil {
+		return role, err
+	}
+	return role, nil
+}
+
+// DeleteRoleByID implements UserRepo.
+func (u *userRepoImpl) DeleteRoleByID(roleID uint) (models.Role, error) {
+	var role models.Role
+	err := u.Db.Where("id = ?", roleID).Delete(&role).Error
+	return role, err
+}
+
+// DeleteRoleByName implements UserRepo.
+func (u *userRepoImpl) DeleteRoleByName(roleName string) (models.Role, error) {
+	var role models.Role
+	err := u.Db.Where("name = ?", roleName).Delete(&role).Error
+	return role, err
+}
+
+// GetRoleByRoleID implements UserRepo.
+func (u *userRepoImpl) GetRoleByRoleID(roleID uint) (models.Role, error) {
+	var roleName models.Role
+	err := u.Db.Where("id = ?", roleID).First(&roleName).Error
+	return roleName, err
 }
 
 // GetRoleByRoleName implements UserRepo.
@@ -205,14 +254,14 @@ func (u *userRepoImpl) GetDeletedUsersByPhone(phone string) ([]models.User, erro
 	return users, err
 }
 
-// Create implements UserRepo.
-func (u *userRepoImpl) Create(user models.User) (models.User, error) {
+// CreateUser implements UserRepo.
+func (u *userRepoImpl) CreateUser(user models.User) (models.User, error) {
 	result := u.Db.Create(&user)
 	return user, result.Error
 }
 
-// Delete implements UserRepo.
-func (u *userRepoImpl) Delete(id string) (models.User, error) {
+// DeleteUser implements UserRepo.
+func (u *userRepoImpl) DeleteUser(id string) (models.User, error) {
 	var user models.User
 
 	err := u.Db.Model(&user).Where("id = ?", id).Updates(map[string]interface{}{
@@ -233,16 +282,16 @@ func (u *userRepoImpl) GetAll() []models.User {
 	return users
 }
 
-// GetById implements UserRepo.
-func (u *userRepoImpl) GetById(id string) (models.User, error) {
+// GetUserById implements UserRepo.
+func (u *userRepoImpl) GetUserById(id string) (models.User, error) {
 	var user models.User
 
 	result := u.Db.Preload("Role").Where("id = ?", id).First(&user)
 	return user, result.Error
 }
 
-// Update implements UserRepo.
-func (u *userRepoImpl) Update(user models.User) (models.User, error) {
+// UpdateUser implements UserRepo.
+func (u *userRepoImpl) UpdateUser(user models.User) (models.User, error) {
 	updateUser := map[string]interface{}{}
 
 	if user.Name != "" {
@@ -257,7 +306,7 @@ func (u *userRepoImpl) Update(user models.User) (models.User, error) {
 	if user.Password != "" {
 		updateUser["password"] = user.Password
 	}
-	if user.CallSign != nil {
+	if user.CallSign != "" {
 		updateUser["call_sign"] = user.CallSign
 	}
 	if user.Contractor != nil {
