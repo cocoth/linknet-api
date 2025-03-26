@@ -39,7 +39,7 @@ func (u *UserController) CreateUser(c *gin.Context) {
 		helper.RespondWithError(c, http.StatusUnauthorized, "No token provided")
 		return
 	}
-	isadmin, err := u.userService.IsAdmin(token)
+	isadmin, _, err := u.userService.IsAdmin(token)
 	if err != nil {
 		helper.RespondWithError(c, http.StatusUnauthorized, err.Error())
 		return
@@ -77,7 +77,7 @@ func (u *UserController) UpdateUser(c *gin.Context) {
 		helper.RespondWithError(c, http.StatusUnauthorized, "No token provided")
 		return
 	}
-	isadmin, err := u.userService.IsAdmin(token)
+	isadmin, _, err := u.userService.IsAdmin(token)
 	if err != nil {
 		helper.RespondWithError(c, http.StatusUnauthorized, err.Error())
 		return
@@ -109,7 +109,7 @@ func (u *UserController) DeleteUser(c *gin.Context) {
 		helper.RespondWithError(c, http.StatusUnauthorized, "No token provided")
 		return
 	}
-	isadmin, err := u.userService.IsAdmin(token)
+	isadmin, _, err := u.userService.IsAdmin(token)
 	if err != nil {
 		helper.RespondWithError(c, http.StatusUnauthorized, err.Error())
 		return
@@ -140,15 +140,11 @@ func (u *UserController) GetAll(c *gin.Context) {
 		helper.RespondWithError(c, http.StatusUnauthorized, "No token provided")
 		return
 	}
-	_, errIsAdmin := u.userService.IsAdmin(token)
+	_, _, errIsAdmin := u.userService.CheckToken(token)
 	if errIsAdmin != nil {
 		helper.RespondWithError(c, http.StatusUnauthorized, errIsAdmin.Error())
 		return
 	}
-	// if !isadmin {
-	// 	helper.RespondWithError(c, http.StatusUnauthorized, "only admin can get user!")
-	// 	return
-	// }
 
 	qID := c.Query("id")
 	qName := c.Query("name")
@@ -207,7 +203,7 @@ func (u *UserController) CreateRole(c *gin.Context) {
 		helper.RespondWithError(c, http.StatusUnauthorized, "No token provided")
 		return
 	}
-	isadmin, err := u.userService.IsAdmin(token)
+	isadmin, _, err := u.userService.IsAdmin(token)
 	if err != nil {
 		helper.RespondWithError(c, http.StatusUnauthorized, err.Error())
 		return
@@ -235,7 +231,7 @@ func (u *UserController) GetAllRole(c *gin.Context) {
 		helper.RespondWithError(c, http.StatusUnauthorized, "No token provided")
 		return
 	}
-	isadmin, err := u.userService.IsAdmin(token)
+	isadmin, _, err := u.userService.IsAdmin(token)
 	if err != nil {
 		helper.RespondWithError(c, http.StatusUnauthorized, err.Error())
 		return
@@ -298,7 +294,7 @@ func (u *UserController) UpdateRole(c *gin.Context) {
 		helper.RespondWithError(c, http.StatusUnauthorized, "No token provided")
 		return
 	}
-	isadmin, err := u.userService.IsAdmin(token)
+	isadmin, _, err := u.userService.IsAdmin(token)
 	if err != nil {
 		helper.RespondWithError(c, http.StatusUnauthorized, err.Error())
 		return
@@ -328,7 +324,7 @@ func (u *UserController) DeleteRole(c *gin.Context) {
 		helper.RespondWithError(c, http.StatusUnauthorized, "No token provided")
 		return
 	}
-	isadmin, err := u.userService.IsAdmin(token)
+	isadmin, _, err := u.userService.IsAdmin(token)
 	if err != nil {
 		helper.RespondWithError(c, http.StatusUnauthorized, err.Error())
 		return

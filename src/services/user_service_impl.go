@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"strconv"
 	"time"
 
 	"github.com/cocoth/linknet-api/src/http/request"
@@ -34,10 +35,13 @@ func sendUserResponse(userModel models.User, err error) (response.UserResponse, 
 		CallSign:   userModel.CallSign,
 		Contractor: userModel.Contractor,
 		Status:     userModel.Status,
-		Role:       &response.RoleResponse{Name: roleName},
-		CreatedAt:  userModel.CreatedAt,
-		UpdatedAt:  userModel.UpdatedAt,
-		DeletedAt:  userModel.DeletedAt,
+		Role: &response.RoleResponse{
+			ID:   strconv.FormatUint(uint64(*userModel.RoleID), 10),
+			Name: roleName,
+		},
+		CreatedAt: userModel.CreatedAt,
+		UpdatedAt: userModel.UpdatedAt,
+		DeletedAt: userModel.DeletedAt,
 	}, nil
 }
 
@@ -50,6 +54,7 @@ func (u *UsersServiceImpl) GetAll() ([]response.UserResponse, error) {
 		var roleResp *response.RoleResponse
 		if user.Role != nil {
 			roleResp = &response.RoleResponse{
+				ID:   strconv.FormatUint(uint64(*user.RoleID), 10),
 				Name: user.Role.Name,
 			}
 		}
@@ -61,10 +66,10 @@ func (u *UsersServiceImpl) GetAll() ([]response.UserResponse, error) {
 			CallSign:   user.CallSign,
 			Contractor: user.Contractor,
 			Status:     user.Status,
+			Role:       roleResp,
 			CreatedAt:  user.CreatedAt,
 			UpdatedAt:  user.UpdatedAt,
 			DeletedAt:  user.DeletedAt,
-			Role:       roleResp,
 		})
 	}
 
@@ -95,6 +100,8 @@ func (u *UsersServiceImpl) GetUsersByEmail(email string) ([]response.UserRespons
 		var roleResp *response.RoleResponse
 		if user.Role != nil {
 			roleResp = &response.RoleResponse{
+				ID: strconv.FormatUint(uint64(*user.RoleID), 10),
+
 				Name: user.Role.Name,
 			}
 		}
@@ -107,6 +114,9 @@ func (u *UsersServiceImpl) GetUsersByEmail(email string) ([]response.UserRespons
 			Contractor: user.Contractor,
 			Status:     user.Status,
 			Role:       roleResp,
+			CreatedAt:  user.CreatedAt,
+			UpdatedAt:  user.UpdatedAt,
+			DeletedAt:  user.DeletedAt,
 		})
 	}
 
@@ -131,6 +141,8 @@ func (u *UsersServiceImpl) GetUsersByName(name string) ([]response.UserResponse,
 		var roleResp *response.RoleResponse
 		if user.Role != nil {
 			roleResp = &response.RoleResponse{
+				ID: strconv.FormatUint(uint64(*user.RoleID), 10),
+
 				Name: user.Role.Name,
 			}
 		}
@@ -143,6 +155,9 @@ func (u *UsersServiceImpl) GetUsersByName(name string) ([]response.UserResponse,
 			Contractor: user.Contractor,
 			Status:     user.Status,
 			Role:       roleResp,
+			CreatedAt:  user.CreatedAt,
+			UpdatedAt:  user.UpdatedAt,
+			DeletedAt:  user.DeletedAt,
 		})
 	}
 
@@ -167,6 +182,8 @@ func (u *UsersServiceImpl) GetUsersByPhone(phone string) ([]response.UserRespons
 		var roleResp *response.RoleResponse
 		if user.Role != nil {
 			roleResp = &response.RoleResponse{
+				ID: strconv.FormatUint(uint64(*user.RoleID), 10),
+
 				Name: user.Role.Name,
 			}
 		}
@@ -179,6 +196,9 @@ func (u *UsersServiceImpl) GetUsersByPhone(phone string) ([]response.UserRespons
 			Contractor: user.Contractor,
 			Status:     user.Status,
 			Role:       roleResp,
+			CreatedAt:  user.CreatedAt,
+			UpdatedAt:  user.UpdatedAt,
+			DeletedAt:  user.DeletedAt,
 		})
 	}
 
@@ -203,6 +223,8 @@ func (u *UsersServiceImpl) GetUsersByRole(role string) ([]response.UserResponse,
 		var roleResp *response.RoleResponse
 		if user.Role != nil {
 			roleResp = &response.RoleResponse{
+				ID: strconv.FormatUint(uint64(*user.RoleID), 10),
+
 				Name: user.Role.Name,
 			}
 		}
@@ -215,6 +237,9 @@ func (u *UsersServiceImpl) GetUsersByRole(role string) ([]response.UserResponse,
 			Contractor: user.Contractor,
 			Status:     user.Status,
 			Role:       roleResp,
+			CreatedAt:  user.CreatedAt,
+			UpdatedAt:  user.UpdatedAt,
+			DeletedAt:  user.DeletedAt,
 		})
 	}
 
@@ -239,6 +264,8 @@ func (u *UsersServiceImpl) GetUsersByStatus(status string) ([]response.UserRespo
 		var roleResp *response.RoleResponse
 		if user.Role != nil {
 			roleResp = &response.RoleResponse{
+				ID: strconv.FormatUint(uint64(*user.RoleID), 10),
+
 				Name: user.Role.Name,
 			}
 		}
@@ -251,6 +278,9 @@ func (u *UsersServiceImpl) GetUsersByStatus(status string) ([]response.UserRespo
 			Contractor: user.Contractor,
 			Status:     user.Status,
 			Role:       roleResp,
+			CreatedAt:  user.CreatedAt,
+			UpdatedAt:  user.UpdatedAt,
+			DeletedAt:  user.DeletedAt,
 		})
 	}
 
@@ -275,6 +305,8 @@ func (u *UsersServiceImpl) GetUsersByContractor(contractor string) ([]response.U
 		var roleResp *response.RoleResponse
 		if user.Role != nil {
 			roleResp = &response.RoleResponse{
+				ID: strconv.FormatUint(uint64(*user.RoleID), 10),
+
 				Name: user.Role.Name,
 			}
 		}
@@ -287,6 +319,9 @@ func (u *UsersServiceImpl) GetUsersByContractor(contractor string) ([]response.U
 			Contractor: user.Contractor,
 			Status:     user.Status,
 			Role:       roleResp,
+			CreatedAt:  user.CreatedAt,
+			UpdatedAt:  user.UpdatedAt,
+			DeletedAt:  user.DeletedAt,
 		})
 	}
 
@@ -372,22 +407,54 @@ func (u *UsersServiceImpl) DeleteUser(id string) (response.UserResponse, error) 
 }
 
 // IsAdmin implements UserService.
-func (u *UsersServiceImpl) IsAdmin(token string) (bool, error) {
+func (u *UsersServiceImpl) IsAdmin(token string) (status bool, userResponse response.UserResponse, err error) {
+	var user response.UserResponse
+
 	exp, userId, err := utils.ValidateJWTToken(token)
 	if err != nil {
-		return false, errors.New("invalid Token")
+		return false, user, errors.New("invalid Token")
 	}
 	if float64(time.Now().Unix()) > exp {
-		return false, errors.New("token expired")
+		return false, user, errors.New("token expired")
 	}
-	userResponse, err := u.GetUserById(userId)
-	if err != nil {
-		return false, errors.New("unauthorized")
+	userResponse, errNotAdmin := u.GetUserById(userId)
+	if errNotAdmin != nil {
+		return false, user, errors.New("unauthorized")
 	}
 	if userResponse.Role.Name != "admin" {
-		return false, errors.New("only admin can access user")
+		return false, user, errors.New("only admin can access user")
 	}
-	return true, nil
+	return true, userResponse, nil
+}
+
+// CheckToken implements UserService.
+func (u *UsersServiceImpl) CheckToken(token string) (status bool, userResponse response.UserResponse, err error) {
+	var user response.UserResponse
+	exp, userId, err := utils.ValidateJWTToken(token)
+	if err != nil {
+		return false, user, errors.New("invalid Token")
+	}
+	if float64(time.Now().Unix()) > exp {
+		return false, user, errors.New("token expired")
+	}
+	userOnDB, err := u.GetUserById(userId)
+	if err != nil {
+		return false, user, errors.New("unauthorized")
+	}
+
+	user.ID = userOnDB.ID
+	user.Name = userOnDB.Name
+	user.Email = userOnDB.Email
+	user.Phone = userOnDB.Phone
+	user.CallSign = userOnDB.CallSign
+	user.Contractor = userOnDB.Contractor
+	user.Status = userOnDB.Status
+	user.Role = userOnDB.Role
+	user.CreatedAt = userOnDB.CreatedAt
+	user.UpdatedAt = userOnDB.UpdatedAt
+	user.DeletedAt = userOnDB.DeletedAt
+
+	return true, user, nil
 }
 
 // CreateRole implements UserService.
