@@ -157,19 +157,6 @@ func (u *UserController) GetAll(c *gin.Context) {
 	if curentResUser.Role.Name != "admin" {
 		helper.RespondWithSuccess(c, http.StatusOK, curentResUser)
 		return
-		// } else if qName != "" {
-		// 	users, err = u.userService.GetUsersByName(curentResUser.Name)
-		// } else if qEmail != "" {
-		// 	users, err = u.userService.GetUsersByEmail(curentResUser.Email)
-		// } else if qPhone != "" {
-		// 	users, err = u.userService.GetUsersByPhone(curentResUser.Phone)
-		// } else if qRole != "" {
-		// 	users, err = u.userService.GetUsersByRole(curentResUser.Role.Name)
-		// } else if qContractor != "" {
-		// 	users, err = u.userService.GetUsersByContractor(*curentResUser.Contractor)
-		// } else if qStatus != "" {
-		// 	users, err = u.userService.GetUsersByStatus(*curentResUser.Status)
-		// }
 	} else if curentResUser.Role.Name == "admin" {
 		if qID != "" {
 			user, errUser := u.userService.GetUserById(qID)
@@ -184,17 +171,17 @@ func (u *UserController) GetAll(c *gin.Context) {
 			helper.RespondWithSuccess(c, http.StatusOK, user)
 			return
 		} else if qName != "" {
-			users, err = u.userService.GetUsersByName(curentResUser.Name)
+			users, err = u.userService.GetUsersByName(qName)
 		} else if qEmail != "" {
-			users, err = u.userService.GetUsersByEmail(curentResUser.Email)
+			users, err = u.userService.GetUsersByEmail(qEmail)
 		} else if qPhone != "" {
-			users, err = u.userService.GetUsersByPhone(curentResUser.Phone)
+			users, err = u.userService.GetUsersByPhone(qPhone)
 		} else if qRole != "" {
-			users, err = u.userService.GetUsersByRole(curentResUser.Role.Name)
+			users, err = u.userService.GetUsersByRole(qRole)
 		} else if qContractor != "" {
-			users, err = u.userService.GetUsersByContractor(*curentResUser.Contractor)
+			users, err = u.userService.GetUsersByContractor(qContractor)
 		} else if qStatus != "" {
-			users, err = u.userService.GetUsersByStatus(*curentResUser.Status)
+			users, err = u.userService.GetUsersByStatus(qStatus)
 		} else {
 			users, err = u.userService.GetAll()
 		}

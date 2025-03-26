@@ -43,7 +43,7 @@ func GenerateJWTToken(userId string) (tokenstr string) {
 		"userId": userId,
 		"exp":    time.Now().Add(time.Hour * 24 * 7).Unix(),
 	})
-	secret := os.Getenv("JWT_SCRET_KEY_USER")
+	secret := os.Getenv("JWT_SECRET_KEY_USER")
 	tokenstr, err := token.SignedString([]byte(secret))
 
 	if err != nil {
@@ -53,7 +53,7 @@ func GenerateJWTToken(userId string) (tokenstr string) {
 }
 
 func ValidateJWTToken(tokenstr string) (exp float64, userId string, err error) {
-	secret := os.Getenv("JWT_SCRET_KEY_USER")
+	secret := os.Getenv("JWT_SECRET_KEY_USER")
 	token, err := jwt.Parse(tokenstr, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return 0, err

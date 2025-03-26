@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"os"
 
 	"github.com/cocoth/linknet-api/src/http/request"
 	"github.com/cocoth/linknet-api/src/http/response"
@@ -89,9 +90,12 @@ func (u *UserAuthServiceImpl) Login(users request.LoginUserRequest) (response.Lo
 		return response.LoginUserResponse{}, err
 	}
 
-	// Generate token
-	errPass := utils.CompareHashPassword(users.Password, user.Password)
-	if errPass != nil {
+	pass, err := utils.Decrypt(user.Password, os.Getenv("DB_KEY_ENCRYPT"))
+	if err != nil {
+		return response.LoginUserResponse{}, err
+	}
+
+	if pass != users.Password {
 		return response.LoginUserResponse{}, errors.New("invalid credentials")
 	}
 

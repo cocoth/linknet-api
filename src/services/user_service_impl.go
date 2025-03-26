@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"os"
 	"strconv"
 	"time"
 
@@ -27,12 +28,16 @@ func sendUserResponse(userModel models.User, err error) (response.UserResponse, 
 	if userModel.Role != nil {
 		roleName = userModel.Role.Name
 	}
+	pass, err := utils.Decrypt(userModel.Password, os.Getenv("DB_KEY_ENCRYPT"))
+	if err != nil {
+		return response.UserResponse{}, err
+	}
 	return response.UserResponse{
 		ID:         userModel.ID,
 		Name:       userModel.Name,
 		Email:      userModel.Email,
 		Phone:      userModel.Phone,
-		Password:   &userModel.Password,
+		Password:   &pass,
 		CallSign:   userModel.CallSign,
 		Contractor: userModel.Contractor,
 		Status:     userModel.Status,
@@ -46,12 +51,12 @@ func sendUserResponse(userModel models.User, err error) (response.UserResponse, 
 	}, nil
 }
 
-// GetAll implements UserService.
-func (u *UsersServiceImpl) GetAll() ([]response.UserResponse, error) {
-	result := u.UserRepo.GetAll()
+func sendUsersResponse(userModel []models.User, err error) ([]response.UserResponse, error) {
+	if err != nil {
+		return nil, err
+	}
 	var users []response.UserResponse
-
-	for _, user := range result {
+	for _, user := range userModel {
 		var roleResp *response.RoleResponse
 		if user.Role != nil {
 			roleResp = &response.RoleResponse{
@@ -59,12 +64,16 @@ func (u *UsersServiceImpl) GetAll() ([]response.UserResponse, error) {
 				Name: user.Role.Name,
 			}
 		}
+		pass, err := utils.Decrypt(user.Password, os.Getenv("DB_KEY_ENCRYPT"))
+		if err != nil {
+			return nil, err
+		}
 		users = append(users, response.UserResponse{
 			ID:         user.ID,
 			Name:       user.Name,
 			Email:      user.Email,
 			Phone:      user.Phone,
-			Password:   &user.Password,
+			Password:   &pass,
 			CallSign:   user.CallSign,
 			Contractor: user.Contractor,
 			Status:     user.Status,
@@ -74,8 +83,14 @@ func (u *UsersServiceImpl) GetAll() ([]response.UserResponse, error) {
 			DeletedAt:  user.DeletedAt,
 		})
 	}
-
 	return users, nil
+}
+
+// GetAll implements UserService.
+func (u *UsersServiceImpl) GetAll() ([]response.UserResponse, error) {
+	result := u.UserRepo.GetAll()
+	return sendUsersResponse(result, nil)
+
 }
 
 // GetUserById implements UserService.
@@ -86,7 +101,6 @@ func (u *UsersServiceImpl) GetUserById(id string) (response.UserResponse, error)
 
 // GetUsersByEmail implements UserService.
 func (u *UsersServiceImpl) GetUsersByEmail(email string) ([]response.UserResponse, error) {
-	var users []response.UserResponse
 
 	err := u.Validate.Var(email, "required")
 	if err != nil {
@@ -94,41 +108,11 @@ func (u *UsersServiceImpl) GetUsersByEmail(email string) ([]response.UserRespons
 	}
 	dataUsers, err := u.UserRepo.GetUsersByEmail(email)
 
-	if err != nil {
-		return nil, err
-	}
-
-	for _, user := range dataUsers {
-		var roleResp *response.RoleResponse
-		if user.Role != nil {
-			roleResp = &response.RoleResponse{
-				ID: strconv.FormatUint(uint64(*user.RoleID), 10),
-
-				Name: user.Role.Name,
-			}
-		}
-		users = append(users, response.UserResponse{
-			ID:         user.ID,
-			Name:       user.Name,
-			Email:      user.Email,
-			Phone:      user.Phone,
-			Password:   &user.Password,
-			CallSign:   user.CallSign,
-			Contractor: user.Contractor,
-			Status:     user.Status,
-			Role:       roleResp,
-			CreatedAt:  user.CreatedAt,
-			UpdatedAt:  user.UpdatedAt,
-			DeletedAt:  user.DeletedAt,
-		})
-	}
-
-	return users, nil
+	return sendUsersResponse(dataUsers, err)
 }
 
 // GetUsersByName implements UserService.
 func (u *UsersServiceImpl) GetUsersByName(name string) ([]response.UserResponse, error) {
-	var users []response.UserResponse
 
 	err := u.Validate.Var(name, "required")
 	if err != nil {
@@ -136,83 +120,22 @@ func (u *UsersServiceImpl) GetUsersByName(name string) ([]response.UserResponse,
 	}
 	dataUsers, err := u.UserRepo.GetUsersByName(name)
 
-	if err != nil {
-		return nil, err
-	}
-
-	for _, user := range dataUsers {
-		var roleResp *response.RoleResponse
-		if user.Role != nil {
-			roleResp = &response.RoleResponse{
-				ID: strconv.FormatUint(uint64(*user.RoleID), 10),
-
-				Name: user.Role.Name,
-			}
-		}
-		users = append(users, response.UserResponse{
-			ID:         user.ID,
-			Name:       user.Name,
-			Email:      user.Email,
-			Phone:      user.Phone,
-			Password:   &user.Password,
-			CallSign:   user.CallSign,
-			Contractor: user.Contractor,
-			Status:     user.Status,
-			Role:       roleResp,
-			CreatedAt:  user.CreatedAt,
-			UpdatedAt:  user.UpdatedAt,
-			DeletedAt:  user.DeletedAt,
-		})
-	}
-
-	return users, nil
+	return sendUsersResponse(dataUsers, err)
 }
 
 // GetUsersByPhone implements UserService.
 func (u *UsersServiceImpl) GetUsersByPhone(phone string) ([]response.UserResponse, error) {
-	var users []response.UserResponse
 
 	err := u.Validate.Var(phone, "required")
 	if err != nil {
 		return nil, err
 	}
 	dataUsers, err := u.UserRepo.GetUsersByPhone(phone)
-
-	if err != nil {
-		return nil, err
-	}
-
-	for _, user := range dataUsers {
-		var roleResp *response.RoleResponse
-		if user.Role != nil {
-			roleResp = &response.RoleResponse{
-				ID: strconv.FormatUint(uint64(*user.RoleID), 10),
-
-				Name: user.Role.Name,
-			}
-		}
-		users = append(users, response.UserResponse{
-			ID:         user.ID,
-			Name:       user.Name,
-			Email:      user.Email,
-			Phone:      user.Phone,
-			Password:   &user.Password,
-			CallSign:   user.CallSign,
-			Contractor: user.Contractor,
-			Status:     user.Status,
-			Role:       roleResp,
-			CreatedAt:  user.CreatedAt,
-			UpdatedAt:  user.UpdatedAt,
-			DeletedAt:  user.DeletedAt,
-		})
-	}
-
-	return users, nil
+	return sendUsersResponse(dataUsers, err)
 }
 
 // GetUsersByRole implements UserService.
 func (u *UsersServiceImpl) GetUsersByRole(role string) ([]response.UserResponse, error) {
-	var users []response.UserResponse
 
 	err := u.Validate.Var(role, "required")
 	if err != nil {
@@ -220,83 +143,22 @@ func (u *UsersServiceImpl) GetUsersByRole(role string) ([]response.UserResponse,
 	}
 	dataUsers, err := u.UserRepo.GetUsersByRole(role)
 
-	if err != nil {
-		return nil, err
-	}
-
-	for _, user := range dataUsers {
-		var roleResp *response.RoleResponse
-		if user.Role != nil {
-			roleResp = &response.RoleResponse{
-				ID: strconv.FormatUint(uint64(*user.RoleID), 10),
-
-				Name: user.Role.Name,
-			}
-		}
-		users = append(users, response.UserResponse{
-			ID:         user.ID,
-			Name:       user.Name,
-			Email:      user.Email,
-			Phone:      user.Phone,
-			Password:   &user.Password,
-			CallSign:   user.CallSign,
-			Contractor: user.Contractor,
-			Status:     user.Status,
-			Role:       roleResp,
-			CreatedAt:  user.CreatedAt,
-			UpdatedAt:  user.UpdatedAt,
-			DeletedAt:  user.DeletedAt,
-		})
-	}
-
-	return users, nil
+	return sendUsersResponse(dataUsers, err)
 }
 
 // GetUsersByStatus implements UserService.
 func (u *UsersServiceImpl) GetUsersByStatus(status string) ([]response.UserResponse, error) {
-	var users []response.UserResponse
 
 	err := u.Validate.Var(status, "required")
 	if err != nil {
 		return nil, err
 	}
 	dataUsers, err := u.UserRepo.GetUsersByStatus(status)
-
-	if err != nil {
-		return nil, err
-	}
-
-	for _, user := range dataUsers {
-		var roleResp *response.RoleResponse
-		if user.Role != nil {
-			roleResp = &response.RoleResponse{
-				ID: strconv.FormatUint(uint64(*user.RoleID), 10),
-
-				Name: user.Role.Name,
-			}
-		}
-		users = append(users, response.UserResponse{
-			ID:         user.ID,
-			Name:       user.Name,
-			Email:      user.Email,
-			Phone:      user.Phone,
-			Password:   &user.Password,
-			CallSign:   user.CallSign,
-			Contractor: user.Contractor,
-			Status:     user.Status,
-			Role:       roleResp,
-			CreatedAt:  user.CreatedAt,
-			UpdatedAt:  user.UpdatedAt,
-			DeletedAt:  user.DeletedAt,
-		})
-	}
-
-	return users, nil
+	return sendUsersResponse(dataUsers, err)
 }
 
 // GetUsersByContractor implements UserService.
 func (u *UsersServiceImpl) GetUsersByContractor(contractor string) ([]response.UserResponse, error) {
-	var users []response.UserResponse
 
 	err := u.Validate.Var(contractor, "required")
 	if err != nil {
@@ -304,36 +166,7 @@ func (u *UsersServiceImpl) GetUsersByContractor(contractor string) ([]response.U
 	}
 	dataUsers, err := u.UserRepo.GetUsersByContractor(contractor)
 
-	if err != nil {
-		return nil, err
-	}
-
-	for _, user := range dataUsers {
-		var roleResp *response.RoleResponse
-		if user.Role != nil {
-			roleResp = &response.RoleResponse{
-				ID: strconv.FormatUint(uint64(*user.RoleID), 10),
-
-				Name: user.Role.Name,
-			}
-		}
-		users = append(users, response.UserResponse{
-			ID:         user.ID,
-			Name:       user.Name,
-			Email:      user.Email,
-			Phone:      user.Phone,
-			Password:   &user.Password,
-			CallSign:   user.CallSign,
-			Contractor: user.Contractor,
-			Status:     user.Status,
-			Role:       roleResp,
-			CreatedAt:  user.CreatedAt,
-			UpdatedAt:  user.UpdatedAt,
-			DeletedAt:  user.DeletedAt,
-		})
-	}
-
-	return users, nil
+	return sendUsersResponse(dataUsers, err)
 }
 
 // CreateUser implements UserService.
@@ -587,7 +420,7 @@ func (u *UsersServiceImpl) UpdateUser(id string, user request.UpdateUserRequest)
 		userData.Phone = *user.Phone
 	}
 	if user.Password != nil {
-		hash, err := utils.GenerateHashPassword([]byte(*user.Password))
+		hash, err := utils.Encrypt(*user.Password, os.Getenv("DB_KEY_ENCRYPT"))
 		if err != nil {
 			return response.UserResponse{}, err
 		}

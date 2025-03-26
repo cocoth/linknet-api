@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/cocoth/linknet-api/src/controllers"
@@ -15,16 +16,17 @@ import (
 )
 
 var (
-	appDb     string
-	appHost   string
-	appPort   string
-	appUpload string
-	dbName    string
-	dbHost    string
-	dbPort    string
-	dbUser    string
-	dbPass    string
-	jwtSecret string
+	appDb        string
+	appHost      string
+	appPort      string
+	appUpload    string
+	dbName       string
+	dbHost       string
+	dbPort       string
+	dbUser       string
+	dbPass       string
+	dbKeyEncrypt string
+	jwtSecret    string
 )
 
 var serveCmd = &cobra.Command{
@@ -47,6 +49,7 @@ func init() {
 	serveCmd.Flags().StringVar(&dbPort, "db-port", "", "Database port")
 	serveCmd.Flags().StringVar(&dbUser, "db-user", "", "Database user")
 	serveCmd.Flags().StringVar(&dbPass, "db-pass", "", "Database password")
+	serveCmd.Flags().StringVar(&dbKeyEncrypt, "db-key-encrypt", "", "Database key encrypt for user password, must be 16, 24, or 32 bytes")
 	serveCmd.Flags().StringVar(&jwtSecret, "jwt-secret", "", "JWT secret")
 	RootCmd.AddCommand(serveCmd)
 }
@@ -133,14 +136,30 @@ func ServerConfig() {
 	} else {
 		UpdateEnv("DB_PASS", dbPass)
 	}
-	if jwtSecret == "" {
-		jwtSecret = os.Getenv("JWT_SCRET_KEY_USER")
-		if jwtSecret == "" {
-			jwtSecret = PromptInput("Enter JWT secret")
-			UpdateEnv("JWT_SCRET_KEY_USER", jwtSecret)
+	if dbKeyEncrypt == "" {
+		dbKeyEncrypt = os.Getenv("DB_KEY_ENCRYPT")
+		if dbKeyEncrypt == "" {
+			for {
+				dbKeyEncrypt = PromptInputCredentials("Enter database key encrypt for user password, min 16 bytes, 24 bytes, or 32 bytes")
+				if len(dbKeyEncrypt) != 16 && len(dbKeyEncrypt) != 24 && len(dbKeyEncrypt) != 32 {
+					fmt.Println("Password must be at least min 16 bytes, 24 bytes, or 32 bytes. Please try again.")
+					continue
+				}
+				break
+			}
+			UpdateEnv("DB_KEY_ENCRYPT", dbKeyEncrypt)
 		}
 	} else {
-		UpdateEnv("JWT_SCRET_KEY_USER", jwtSecret)
+		UpdateEnv("DB_KEY_ENCRYPT", dbKeyEncrypt)
+	}
+	if jwtSecret == "" {
+		jwtSecret = os.Getenv("JWT_SECRET_KEY_USER")
+		if jwtSecret == "" {
+			jwtSecret = PromptInput("Enter JWT secret")
+			UpdateEnv("JWT_SECRET_KEY_USER", jwtSecret)
+		}
+	} else {
+		UpdateEnv("JWT_SECRET_KEY_USER", jwtSecret)
 	}
 }
 

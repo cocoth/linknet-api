@@ -1,4 +1,4 @@
 .env
 vendor
 uploads
-test/*
+test

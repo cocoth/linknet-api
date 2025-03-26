@@ -1,6 +1,7 @@
 package models
 
 import (
+	"os"
 	"time"
 
 	"github.com/cocoth/linknet-api/src/utils"
@@ -29,9 +30,10 @@ type User struct {
 
 func (user *User) BeforeCreate(tx *gorm.DB) error {
 	user.ID = uuid.New().String()
-	hash, err := utils.GenerateHashPassword([]byte(user.Password))
+	key := os.Getenv("DB_KEY_ENCRYPT")
+	hash, err := utils.Encrypt(user.Password, key)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	user.Password = hash
 	return nil
