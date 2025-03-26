@@ -153,19 +153,24 @@ func InitializeAndRunServer() {
 
 	userRepo := repo.NewUserRepoImpl(db)
 	fileUploadRepo := repo.NewFileUploadRepo(db)
+	surveyRepo := repo.NewSurveyRepoImpl(db)
 
 	userService := services.NewUserServiceImpl(userRepo, validate)
 	authService := services.NewAuthService(userRepo)
 	fileUploadService := services.NewFileUploadServiceImpl(fileUploadRepo)
+	surveyService := services.NewSurveyServiceImpl(surveyRepo)
 
 	authMiddleware := middleware.NewUserAuthorization(userService)
 
 	userCtrl := controllers.NewUserController(userService)
 	authCtrl := controllers.NewAuthController(authService)
 	fileCtrl := controllers.NewFileController(fileUploadService, userService)
+	surveyCtrl := controllers.NewSurveyController(surveyService, userService)
 
 	routes.AuthRoute(authMiddleware, authCtrl, v1)
 	routes.UserRoute(userCtrl, v1)
 	routes.FileRoute(fileCtrl, v1)
+	routes.SurveyRoute(surveyCtrl, v1)
+
 	StartServer(r, appHost, appPort)
 }
