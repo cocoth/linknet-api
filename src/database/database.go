@@ -29,7 +29,7 @@ func ConnectToDB() {
 		dsn = db_user + ":" + db_pass + "@tcp(" + db_host + ":" + db_port + ")/"
 		err = CreateDatabaseIfNotExists("mysql", dsn, db_name)
 		if err != nil {
-			utils.Error("Failed to create database", "ConnectToDB")
+			utils.Error("Error: "+err.Error(), "ConnectToDB")
 			os.Exit(1)
 		}
 		dsn += db_name + "?charset=utf8mb4&parseTime=True&loc=Local"
@@ -38,7 +38,7 @@ func ConnectToDB() {
 		dsn = "host=" + db_host + " port=" + db_port + " user=" + db_user + " password=" + db_pass + " sslmode=disable"
 		err = CreateDatabaseIfNotExists("postgres", dsn, db_name)
 		if err != nil {
-			utils.Error("Failed to create database", "ConnectToDB")
+			utils.Error("Error: "+err.Error(), "ConnectToDB")
 			os.Exit(1)
 
 		}
@@ -50,5 +50,10 @@ func ConnectToDB() {
 		os.Exit(1)
 	}
 
-	DB.AutoMigrate(&models.User{}, &models.Role{}, &models.FileUpload{})
+	DB.AutoMigrate(
+		&models.User{},
+		&models.Role{},
+		&models.FileUpload{},
+		&models.Survey{},
+	)
 }

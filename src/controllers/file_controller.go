@@ -326,5 +326,5 @@ func (f *FileController) DeleteFileUpload(c *gin.Context) {
 		helper.RespondWithError(c, http.StatusInternalServerError, err.Error())
 		return
 	}
-	helper.RespondWithSuccess(c, http.StatusOK, file)
+	helper.RespondWithSuccess(c, http.StatusOK, "File deleted successfully")
 }

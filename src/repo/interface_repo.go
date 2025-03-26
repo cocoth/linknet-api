@@ -61,3 +61,58 @@ type FileUploadRepo interface {
 	DeleteFileUploadByFileName(fileName string) (models.FileUpload, error)
 	DeleteFileUploadByFileHash(fileHash string) (models.FileUpload, error)
 }
+
+type SurveyRepo interface {
+	GetAllSurvey() ([]models.Survey, error)
+	GetSurveyByID(id string) (models.Survey, error)
+	GetSurveyByTitle(title string) (models.Survey, error)
+	GetSurveyByFormNumber(formNumber string) (models.Survey, error)
+	GetSurveyByQuestorName(questorName string) (models.Survey, error)
+
+	GetSurveyByFAT(fat string) (models.Survey, error)
+
+	GetSurveyByCustomerName(customerName string) (models.Survey, error)
+	GetSurveyByAddress(address string) (models.Survey, error)
+
+	GetSurveyByNodeFDT(nodeFDT string) (models.Survey, error)
+	GetSurveyBySurveyDate(surveyDate string) (models.Survey, error)
+	GetSurveyBySurveyorID(surveyorID string) (models.Survey, error)
+
+	GetSurveyByImageID(imageID string) (models.Survey, error)
+
+	GetSurveysByTitle(title string) ([]models.Survey, error)
+	GetSurveysByQuestorName(questorName string) ([]models.Survey, error)
+	GetSurveysByCustomerName(customerName string) ([]models.Survey, error)
+	GetSurveysByAddress(address string) ([]models.Survey, error)
+	GetSurveysBySurveyorName(surveyorName string) ([]models.Survey, error)
+
+	CreateSurvey(survey models.Survey) (models.Survey, error)
+	UpdateSurvey(survey models.Survey) (models.Survey, error)
+	DeleteSurvey(id string) (models.Survey, error)
+}
+
+type SurveyReportRepo interface {
+	GetAllSurveyReport() ([]models.SurveyReport, error)
+	GetSurveyReportByID(id string) (models.SurveyReport, error)
+	GetSurveyReportBySurveyID(surveyID string) (models.SurveyReport, error)
+	GetSurveyReportByRemark(remark string) (models.SurveyReport, error)
+	GetSurveyReportByStatus(status string) (models.SurveyReport, error)
+
+	CreateSurveyReport(surveyReport models.SurveyReport) (models.SurveyReport, error)
+	UpdateSurveyReport(surveyReport models.SurveyReport) (models.SurveyReport, error)
+	DeleteSurveyReport(id string) (models.SurveyReport, error)
+}
+
+type NotifyRepo interface {
+	GetAllNotify() ([]models.Notify, error)
+	GetNotifyByID(id string) (models.Notify, error)
+	GetNotifyByUserID(userID string) (models.Notify, error)
+	GetNotifyByFileID(fileID string) (models.Notify, error)
+	GetNotifyByNotifyType(notifyType string) (models.Notify, error)
+	GetNotifyByNotifyStatus(notifyStatus string) (models.Notify, error)
+	GetNotifyByNotifyMessage(notifyMessage string) (models.Notify, error)
+
+	CreateNotify(notify models.Notify) (models.Notify, error)
+	UpdateNotify(notify models.Notify) (models.Notify, error)
+	DeleteNotify(id string) (models.Notify, error)
+}

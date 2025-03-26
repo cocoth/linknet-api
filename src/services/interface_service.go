@@ -16,7 +16,8 @@ type UserService interface {
 	GetUsersByStatus(status string) ([]response.UserResponse, error)
 	GetUsersByContractor(contractor string) ([]response.UserResponse, error)
 
-	IsAdmin(token string) (bool, error)
+	IsAdmin(token string) (status bool, userResponse response.UserResponse, err error)
+	CheckToken(token string) (status bool, userResponse response.UserResponse, err error)
 
 	CreateRole(role request.RoleRequest) (response.RoleResponse, error)
 	GetAllRole() ([]response.RoleResponse, error)
@@ -54,4 +55,56 @@ type FileUploadService interface {
 	DeleteFileUploadByFileID(id string) (response.FileUploadResponse, error)
 	DeleteFileUploadByFileName(fileName string) (response.FileUploadResponse, error)
 	DeleteFileUploadByFileHash(fileHash string) (response.FileUploadResponse, error)
+}
+
+type SurveyService interface {
+	GetAllSurvey() ([]response.SurveyResponse, error)
+	GetSurveyByID(id string) (response.SurveyResponse, error)
+	GetSurveyByTitle(title string) (response.SurveyResponse, error)
+	GetSurveyByFormNumber(formNumber string) (response.SurveyResponse, error)
+	GetSurveyByQuestorName(questorName string) (response.SurveyResponse, error)
+	GetSurveyByFAT(fat string) (response.SurveyResponse, error)
+	GetSurveyByCustomerName(customerName string) (response.SurveyResponse, error)
+	GetSurveyByAddress(address string) (response.SurveyResponse, error)
+	GetSurveyByNodeFDT(nodeFDT string) (response.SurveyResponse, error)
+	GetSurveyBySurveyDate(surveyDate string) (response.SurveyResponse, error)
+	GetSurveyBySurveyorID(surveyorID string) (response.SurveyResponse, error)
+
+	GetSurveyByImageID(imageID string) (response.SurveyResponse, error)
+
+	GetSurveysByTitle(title string) ([]response.SurveyResponse, error)
+	GetSurveysByQuestorName(questorName string) ([]response.SurveyResponse, error)
+	GetSurveysByCustomerName(customerName string) ([]response.SurveyResponse, error)
+	GetSurveysByAddress(address string) ([]response.SurveyResponse, error)
+	GetSurveysBySurveyorName(surveyorName string) ([]response.SurveyResponse, error)
+
+	CreateSurvey(survey request.SurveyRequest) (response.SurveyResponse, error)
+	UpdateSurvey(id string, survey request.UpdateSurveyRequest) (response.SurveyResponse, error)
+	DeleteSurvey(id string) (response.SurveyResponse, error)
+}
+
+type SurveyReportService interface {
+	GetAllSurveyReport() ([]response.SurveyReportResponse, error)
+	GetSurveyReportByID(id string) (response.SurveyReportResponse, error)
+	GetSurveyBySurveyID(surveyID string) (response.SurveyReportResponse, error)
+	GetSurveyReportByStatus(status string) (response.SurveyReportResponse, error)
+	GetSurveyReportByRemark(remark string) (response.SurveyReportResponse, error)
+
+	CreateSurveyReport(surveyReport request.SurveyReportRequest) (response.SurveyReportResponse, error)
+	UpdateSurveyReport(id string, surveyReport request.UpdateSurveyReportRequest) (response.SurveyReportResponse, error)
+	DeleteSurveyReport(id string) (response.SurveyReportResponse, error)
+}
+
+type NotifyService interface {
+	GetAllNotify() ([]response.NotifyResponse, error)
+	GetNotifyByID(id string) (response.NotifyResponse, error)
+	GetNotifyByUserID(userID string) (response.NotifyResponse, error)
+	GetNotifyByFileID(fileID string) (response.NotifyResponse, error)
+	GetNotifyByNotifyType(notifyType string) (response.NotifyResponse, error)
+	GetNotifyByNotifyStatus(notifyStatus string) (response.NotifyResponse, error)
+	GetNotifyByNotifyMessage(notifyMessage string) (response.NotifyResponse, error)
+
+	CreateNotify(notify request.NotifyRequest) (response.NotifyResponse, error)
+	UpdateNotify(id string, notify request.NotifyRequest) (response.NotifyResponse, error)
+	DeleteNotify(id string) (response.NotifyResponse, error)
 }

@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"crypto/aes"
+	"crypto/cipher"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
@@ -92,12 +94,58 @@ func CalculateHash(filePath string) (hash string, err error) {
 	hashBytes := hasher.Sum(nil)
 	return hex.EncodeToString(hashBytes), nil
 }
+
 func CalculateHashByBuffer(file io.Reader) string {
 	hash := sha256.New()
 	if _, err := io.Copy(hash, file); err != nil {
 		return ""
 	}
 	return hex.EncodeToString(hash.Sum(nil))
+}
+
+// Encrypt encrypts plaintext using AES encryption
+func Encrypt(plaintext, key string) (string, error) {
+	block, err := aes.NewCipher([]byte(key))
+	if err != nil {
+		return "", err
+	}
+
+	ciphertext := make([]byte, aes.BlockSize+len(plaintext))
+	iv := ciphertext[:aes.BlockSize]
+
+	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
+		return "", err
+	}
+
+	stream := cipher.NewCFBEncrypter(block, iv)
+	stream.XORKeyStream(ciphertext[aes.BlockSize:], []byte(plaintext))
+
+	return base64.URLEncoding.EncodeToString(ciphertext), nil
+}
+
+// Decrypt decrypts ciphertext using AES encryption
+func Decrypt(ciphertext, key string) (string, error) {
+	block, err := aes.NewCipher([]byte(key))
+	if err != nil {
+		return "", err
+	}
+
+	ciphertextBytes, err := base64.URLEncoding.DecodeString(ciphertext)
+	if err != nil {
+		return "", err
+	}
+
+	if len(ciphertextBytes) < aes.BlockSize {
+		return "", errors.New("ciphertext too short")
+	}
+
+	iv := ciphertextBytes[:aes.BlockSize]
+	ciphertextBytes = ciphertextBytes[aes.BlockSize:]
+
+	stream := cipher.NewCFBDecrypter(block, iv)
+	stream.XORKeyStream(ciphertextBytes, ciphertextBytes)
+
+	return string(ciphertextBytes), nil
 }
 
 func SanitizeString(input string) string {

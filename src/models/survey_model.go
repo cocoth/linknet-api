@@ -1,6 +1,11 @@
 package models
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+	"gorm.io/gorm"
+)
 
 type Survey struct {
 	ID           string        `gorm:"type:varchar(36);primaryKey" json:"id"`
@@ -22,6 +27,11 @@ type Survey struct {
 	DeletedAt    *time.Time `gorm:"index"`
 }
 
+func (user *Survey) BeforeCreate(tx *gorm.DB) error {
+	user.ID = uuid.New().String()
+	return nil
+}
+
 type SurveyReport struct {
 	ID        string      `gorm:"type:varchar(36);primaryKey" json:"id"`
 	SurveyID  string      `json:"survey_id"`
@@ -39,7 +49,7 @@ type Notify struct {
 	ID            string      `gorm:"type:varchar(36);primaryKey" json:"id"`
 	UserID        string      `gorm:"type:varchar(36);not null" json:"user_id"`
 	User          User        `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"user"`
-	FileID        string      `json:"file_id"`
+	FileID        *string     `json:"file_id"`
 	File          *FileUpload `gorm:"foreignKey:FileID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"file"`
 	NotifyType    string      `json:"notify_type"`
 	NotifyStatus  string      `gorm:"type:enum('pending','approved','rejected');default:'pending'" json:"notify_status"`

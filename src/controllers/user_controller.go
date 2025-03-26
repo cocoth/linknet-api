@@ -140,9 +140,9 @@ func (u *UserController) GetAll(c *gin.Context) {
 		helper.RespondWithError(c, http.StatusUnauthorized, "No token provided")
 		return
 	}
-	_, _, errIsAdmin := u.userService.CheckToken(token)
-	if errIsAdmin != nil {
-		helper.RespondWithError(c, http.StatusUnauthorized, errIsAdmin.Error())
+	_, curentResUser, errToken := u.userService.CheckToken(token)
+	if errToken != nil {
+		helper.RespondWithError(c, http.StatusUnauthorized, errToken.Error())
 		return
 	}
 
@@ -154,32 +154,50 @@ func (u *UserController) GetAll(c *gin.Context) {
 	qContractor := c.Query("contractor")
 	qStatus := c.Query("status")
 
-	if qID != "" {
-		user, errUser := u.userService.GetUserById(qID)
-		if errUser != nil {
-			if errUser.Error() == "record not found" {
-				helper.RespondWithError(c, http.StatusNotFound, "user not found")
-			} else {
-				helper.RespondWithError(c, http.StatusInternalServerError, errUser.Error())
-			}
-			return
-		}
-		helper.RespondWithSuccess(c, http.StatusOK, user)
+	if curentResUser.Role.Name != "admin" {
+		helper.RespondWithSuccess(c, http.StatusOK, curentResUser)
 		return
-	} else if qName != "" {
-		users, err = u.userService.GetUsersByName(qName)
-	} else if qEmail != "" {
-		users, err = u.userService.GetUsersByEmail(qEmail)
-	} else if qPhone != "" {
-		users, err = u.userService.GetUsersByPhone(qPhone)
-	} else if qRole != "" {
-		users, err = u.userService.GetUsersByRole(qRole)
-	} else if qContractor != "" {
-		users, err = u.userService.GetUsersByContractor(qContractor)
-	} else if qStatus != "" {
-		users, err = u.userService.GetUsersByStatus(qStatus)
-	} else {
-		users, err = u.userService.GetAll()
+		// } else if qName != "" {
+		// 	users, err = u.userService.GetUsersByName(curentResUser.Name)
+		// } else if qEmail != "" {
+		// 	users, err = u.userService.GetUsersByEmail(curentResUser.Email)
+		// } else if qPhone != "" {
+		// 	users, err = u.userService.GetUsersByPhone(curentResUser.Phone)
+		// } else if qRole != "" {
+		// 	users, err = u.userService.GetUsersByRole(curentResUser.Role.Name)
+		// } else if qContractor != "" {
+		// 	users, err = u.userService.GetUsersByContractor(*curentResUser.Contractor)
+		// } else if qStatus != "" {
+		// 	users, err = u.userService.GetUsersByStatus(*curentResUser.Status)
+		// }
+	} else if curentResUser.Role.Name == "admin" {
+		if qID != "" {
+			user, errUser := u.userService.GetUserById(qID)
+			if errUser != nil {
+				if errUser.Error() == "record not found" {
+					helper.RespondWithError(c, http.StatusNotFound, "user not found")
+				} else {
+					helper.RespondWithError(c, http.StatusInternalServerError, errUser.Error())
+				}
+				return
+			}
+			helper.RespondWithSuccess(c, http.StatusOK, user)
+			return
+		} else if qName != "" {
+			users, err = u.userService.GetUsersByName(curentResUser.Name)
+		} else if qEmail != "" {
+			users, err = u.userService.GetUsersByEmail(curentResUser.Email)
+		} else if qPhone != "" {
+			users, err = u.userService.GetUsersByPhone(curentResUser.Phone)
+		} else if qRole != "" {
+			users, err = u.userService.GetUsersByRole(curentResUser.Role.Name)
+		} else if qContractor != "" {
+			users, err = u.userService.GetUsersByContractor(*curentResUser.Contractor)
+		} else if qStatus != "" {
+			users, err = u.userService.GetUsersByStatus(*curentResUser.Status)
+		} else {
+			users, err = u.userService.GetAll()
+		}
 	}
 
 	if err != nil {

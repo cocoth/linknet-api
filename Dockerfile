@@ -30,4 +30,4 @@ COPY --from=builder /app/linknet-api .
 EXPOSE 3000
 
 # Command to run the executable
-CMD ["./linknet-api"]
+CMD ["./linknet-api", "initdb"]

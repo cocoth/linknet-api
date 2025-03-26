@@ -12,6 +12,7 @@ type UserResponse struct {
 	Name       string        `json:"name"`
 	Email      string        `json:"email"`
 	Phone      string        `json:"phone"`
+	Password   *string       `json:"password"`
 	CallSign   string        `json:"call_sign"`
 	Contractor *string       `json:"contractor"`
 	Status     *string       `json:"status"`
