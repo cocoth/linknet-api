@@ -118,17 +118,17 @@ func (u *UserController) DeleteUser(c *gin.Context) {
 		helper.RespondWithError(c, http.StatusUnauthorized, "only admin can delete user!")
 		return
 	}
-	user, err := u.userService.DeleteUser(id)
-	if err != nil {
-		if err.Error() == "record not found" {
+	_, errDelete := u.userService.DeleteUser(id)
+	if errDelete != nil {
+		if errDelete.Error() == "record not found" {
 			helper.RespondWithError(c, http.StatusNotFound, "not found")
 		} else {
-			helper.RespondWithError(c, http.StatusInternalServerError, err.Error())
+			helper.RespondWithError(c, http.StatusInternalServerError, errDelete.Error())
 		}
 		return
 	}
 
-	helper.RespondWithSuccess(c, http.StatusOK, user)
+	helper.RespondWithSuccess(c, http.StatusOK, "user deleted successfully")
 }
 
 func (u *UserController) GetAll(c *gin.Context) {
@@ -140,15 +140,15 @@ func (u *UserController) GetAll(c *gin.Context) {
 		helper.RespondWithError(c, http.StatusUnauthorized, "No token provided")
 		return
 	}
-	isadmin, err := u.userService.IsAdmin(token)
-	if err != nil {
-		helper.RespondWithError(c, http.StatusUnauthorized, err.Error())
+	_, errIsAdmin := u.userService.IsAdmin(token)
+	if errIsAdmin != nil {
+		helper.RespondWithError(c, http.StatusUnauthorized, errIsAdmin.Error())
 		return
 	}
-	if !isadmin {
-		helper.RespondWithError(c, http.StatusUnauthorized, "only admin can get user!")
-		return
-	}
+	// if !isadmin {
+	// 	helper.RespondWithError(c, http.StatusUnauthorized, "only admin can get user!")
+	// 	return
+	// }
 
 	qID := c.Query("id")
 	qName := c.Query("name")
@@ -342,10 +342,10 @@ func (u *UserController) DeleteRole(c *gin.Context) {
 		helper.RespondWithError(c, http.StatusBadRequest, "Invalid role ID")
 		return
 	}
-	role, err := u.userService.DeleteRoleByID(uint(roleID))
-	if err != nil {
-		helper.RespondWithError(c, http.StatusInternalServerError, err.Error())
+	_, errDelete := u.userService.DeleteRoleByID(uint(roleID))
+	if errDelete != nil {
+		helper.RespondWithError(c, http.StatusInternalServerError, errDelete.Error())
 		return
 	}
-	helper.RespondWithSuccess(c, http.StatusOK, role)
+	helper.RespondWithSuccess(c, http.StatusOK, "role deleted successfully")
 }
