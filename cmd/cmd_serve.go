@@ -11,6 +11,7 @@ import (
 	"github.com/cocoth/linknet-api/src/repo"
 	"github.com/cocoth/linknet-api/src/routes"
 	"github.com/cocoth/linknet-api/src/services"
+	"github.com/cocoth/linknet-api/src/utils"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -167,9 +168,20 @@ func ServerConfig() {
 
 func InitializeAndRunServer() {
 	db := database.DB
+	allowOrigin, err := utils.ReadFileLines("config/allowOrigin.config")
+	if err != nil {
+		fmt.Println("Error reading allow origin file", err)
+	}
+	allowOriginWithComma := make([]string, len(allowOrigin))
+	copy(allowOriginWithComma, allowOrigin)
+	for i := range allowOriginWithComma {
+		if i < len(allowOriginWithComma)-1 {
+			allowOriginWithComma[i] += ","
+		}
+	}
 	r := gin.Default()
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:3000"},
+		AllowOrigins:     allowOriginWithComma,
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Content-Disposition", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length", "Content-Disposition", "Set-Cookie"},
