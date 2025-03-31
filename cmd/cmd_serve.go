@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/cocoth/linknet-api/src/controllers"
 	"github.com/cocoth/linknet-api/src/database"
@@ -10,6 +11,7 @@ import (
 	"github.com/cocoth/linknet-api/src/repo"
 	"github.com/cocoth/linknet-api/src/routes"
 	"github.com/cocoth/linknet-api/src/services"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/spf13/cobra"
@@ -142,7 +144,7 @@ func ServerConfig() {
 			for {
 				dbKeyEncrypt = PromptInputCredentials("Enter database key encrypt for user password, min 16 bytes, 24 bytes, or 32 bytes")
 				if len(dbKeyEncrypt) != 16 && len(dbKeyEncrypt) != 24 && len(dbKeyEncrypt) != 32 {
-					fmt.Println("Password must be at least min 16 bytes, 24 bytes, or 32 bytes. Please try again.")
+					fmt.Println("Encryption key must be at least min 16 bytes, 24 bytes, or 32 bytes. Please try again.")
 					continue
 				}
 				break
@@ -166,30 +168,46 @@ func ServerConfig() {
 func InitializeAndRunServer() {
 	db := database.DB
 	r := gin.Default()
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:3000"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Content-Disposition", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length", "Content-Disposition", "Set-Cookie"},
+		AllowWebSockets:  true,
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
+
 	validate := validator.New()
 
 	v1 := r.Group("/api/v1")
 
 	userRepo := repo.NewUserRepoImpl(db)
-	fileUploadRepo := repo.NewFileUploadRepo(db)
+	fileUploadRepo := repo.NewFileUploadRepoImpl(db)
 	surveyRepo := repo.NewSurveyRepoImpl(db)
+	filePermRepo := repo.NewFilePermRepoImpl(db)
+	notifRepo := repo.NewNotifyRepoImpl(db)
 
 	userService := services.NewUserServiceImpl(userRepo, validate)
 	authService := services.NewAuthService(userRepo)
 	fileUploadService := services.NewFileUploadServiceImpl(fileUploadRepo)
+	filePermService := services.NewFilePermServceImpl(filePermRepo)
 	surveyService := services.NewSurveyServiceImpl(surveyRepo)
+	notifService := services.NewNotifyServiceImpl(notifRepo)
 
 	authMiddleware := middleware.NewUserAuthorization(userService)
 
 	userCtrl := controllers.NewUserController(userService)
 	authCtrl := controllers.NewAuthController(authService)
-	fileCtrl := controllers.NewFileController(fileUploadService, userService)
+	fileCtrl := controllers.NewFileController(fileUploadService, filePermService, userService)
 	surveyCtrl := controllers.NewSurveyController(surveyService, userService)
+	notifCtrl := controllers.NewNotifyController(notifService)
 
 	routes.AuthRoute(authMiddleware, authCtrl, v1)
 	routes.UserRoute(userCtrl, v1)
 	routes.FileRoute(fileCtrl, v1)
 	routes.SurveyRoute(surveyCtrl, v1)
+	routes.NotificationRoute(notifCtrl, v1)
 
 	StartServer(r, appHost, appPort)
 }
