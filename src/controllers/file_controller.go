@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -15,14 +16,16 @@ import (
 )
 
 type FileController struct {
-	fileService services.FileUploadService
-	userService services.UserService
+	fileService     services.FileUploadService
+	filePermService services.FileUploadPermService
+	userService     services.UserService
 }
 
-func NewFileController(fileService services.FileUploadService, userService services.UserService) *FileController {
+func NewFileController(fileService services.FileUploadService, filePermService services.FileUploadPermService, userService services.UserService) *FileController {
 	return &FileController{
-		fileService: fileService,
-		userService: userService,
+		fileService:     fileService,
+		filePermService: filePermService,
+		userService:     userService,
 	}
 }
 
@@ -97,6 +100,17 @@ func (f *FileController) UploadFile(c *gin.Context) {
 	}
 
 	fileUploadRequest.FileName = file.Filename
+	fileBytes2, _ := file.Open()
+	defer fileBytes2.Close()
+
+	buffer := make([]byte, 512)
+	_, err = fileBytes2.Read(buffer)
+	if err != nil {
+		helper.RespondWithError(c, 500, "Failed to read file content")
+		return
+	}
+
+	fileUploadRequest.FileType = http.DetectContentType(buffer)
 	fileUploadRequest.FileUri = filePath
 	fileUploadRequest.FileHash = fileHash
 	fileUploadRequest.AuthorID = userRes.ID
@@ -129,13 +143,11 @@ func (f *FileController) GetAllFileUpload(c *gin.Context) {
 		helper.RespondWithSuccess(c, http.StatusOK, file)
 		return
 	} else if qFileName != "" {
-		file, err := f.fileService.GetFileUploadByFileName(qFileName)
+		files, err = f.fileService.GetFilesUploadByFileName(qFileName)
 		if err != nil {
 			helper.RespondWithError(c, http.StatusNotFound, "File not found")
 			return
 		}
-		helper.RespondWithSuccess(c, http.StatusOK, file)
-		return
 	} else if qfileHash != "" {
 		file, err := f.fileService.GetFileUploadByFileHash(qfileHash)
 		if err != nil {
@@ -225,7 +237,6 @@ func (f *FileController) UpdateFileUpload(c *gin.Context) {
 	err = os.Remove(file.FileUri)
 
 	if err != nil {
-		utils.Debug(file.FileUri + " =====> " + err.Error())
 		helper.RespondWithError(c, 404, "no such file or directory")
 		return
 	}
@@ -243,6 +254,17 @@ func (f *FileController) UpdateFileUpload(c *gin.Context) {
 	}
 
 	fileReq.FileName = Updatedfile.Filename
+	fileBytes2, _ := Updatedfile.Open()
+	defer fileBytes2.Close()
+
+	buffer := make([]byte, 512)
+	_, err = fileBytes2.Read(buffer)
+	if err != nil {
+		helper.RespondWithError(c, 500, "Failed to read file content")
+		return
+	}
+
+	fileReq.FileType = http.DetectContentType(buffer)
 	fileReq.FileUri = filePath
 	fileReq.FileHash = fileHash
 	fileReq.AuthorID = userRes.ID
@@ -285,8 +307,17 @@ func (f *FileController) DownloadFile(c *gin.Context) {
 		helper.RespondWithError(c, http.StatusBadRequest, "Invalid query parameter")
 		return
 	}
+	if _, err := os.Stat(file.FileUri); os.IsNotExist(err) {
+		helper.RespondWithError(c, http.StatusNotFound, "File not found on server")
+		return
+	}
 
+	c.Header("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate")
+	// c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", file.FileName))
+	c.Header("Content-Disposition", fmt.Sprintf("inline; filename=\"%s\"", file.FileName))
+	c.Header("Content-Type", file.FileType)
 	c.File(file.FileUri)
+
 }
 
 func (f *FileController) DeleteFileUpload(c *gin.Context) {
@@ -327,4 +358,97 @@ func (f *FileController) DeleteFileUpload(c *gin.Context) {
 		return
 	}
 	helper.RespondWithSuccess(c, http.StatusOK, "File deleted successfully")
+}
+
+func (f *FileController) RequestAccess(c *gin.Context) {
+	var filePermission request.FilePermRequest
+
+	token, err := c.Cookie("session_token")
+	if err != nil {
+		helper.RespondWithError(c, http.StatusUnauthorized, "No token provided")
+		return
+	}
+	isadmin, _, errPerm := f.userService.IsAdmin(token)
+	if errPerm != nil {
+		helper.RespondWithError(c, http.StatusUnauthorized, errPerm.Error())
+		return
+	}
+	if !isadmin {
+		helper.RespondWithError(c, http.StatusUnauthorized, "only admin can access this!")
+		return
+	}
+
+	if errBinding := c.ShouldBindJSON(&filePermission); errBinding != nil {
+		helper.RespondWithError(c, http.StatusBadRequest, errBinding.Error())
+		return
+	}
+
+	errReq := f.filePermService.RequestAccess(filePermission)
+	if errReq != nil {
+		helper.RespondWithError(c, http.StatusInternalServerError, errReq.Error())
+		return
+	}
+	helper.RespondWithSuccess(c, http.StatusOK, "Access requested successfully")
+}
+
+func (f *FileController) ApproveAccess(c *gin.Context) {
+	var filePermission request.FilePermRequest
+
+	token, err := c.Cookie("session_token")
+	if err != nil {
+		helper.RespondWithError(c, http.StatusUnauthorized, "No token provided")
+		return
+	}
+	isadmin, _, errPerm := f.userService.IsAdmin(token)
+	if errPerm != nil {
+		helper.RespondWithError(c, http.StatusUnauthorized, errPerm.Error())
+		return
+	}
+	if !isadmin {
+		helper.RespondWithError(c, http.StatusUnauthorized, "only admin can access this!")
+		return
+	}
+
+	if errBinding := c.ShouldBindJSON(&filePermission); errBinding != nil {
+		helper.RespondWithError(c, http.StatusBadRequest, errBinding.Error())
+		return
+	}
+
+	errReq := f.filePermService.ApproveFileAccess(filePermission)
+	if errReq != nil {
+		helper.RespondWithError(c, http.StatusInternalServerError, errReq.Error())
+		return
+	}
+	helper.RespondWithSuccess(c, http.StatusOK, "Access Approved")
+}
+
+func (f *FileController) RejectAccess(c *gin.Context) {
+	var filePermission request.FilePermRequest
+
+	token, err := c.Cookie("session_token")
+	if err != nil {
+		helper.RespondWithError(c, http.StatusUnauthorized, "No token provided")
+		return
+	}
+	isadmin, _, err := f.userService.IsAdmin(token)
+	if err != nil {
+		helper.RespondWithError(c, http.StatusUnauthorized, err.Error())
+		return
+	}
+	if !isadmin {
+		helper.RespondWithError(c, http.StatusUnauthorized, "only admin can access this!")
+		return
+	}
+
+	if err := c.ShouldBindJSON(&filePermission); err != nil {
+		helper.RespondWithError(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	errReq := f.filePermService.RejectFileAccess(filePermission)
+	if errReq != nil {
+		helper.RespondWithError(c, http.StatusInternalServerError, errReq.Error())
+		return
+	}
+	helper.RespondWithSuccess(c, http.StatusOK, "Access Rejected")
 }

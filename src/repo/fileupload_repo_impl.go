@@ -45,9 +45,9 @@ func (f *fileUploadRepoImpl) GetFileUploadByFileName(fileName string) (models.Fi
 }
 
 // GetFileUploadByFileHash implements FileUploadRepo.
-func (f *fileUploadRepoImpl) GetFileUploadByFileHash(hash string) (models.FileUpload, error) {
+func (f *fileUploadRepoImpl) GetFileUploadByFileHash(fileHash string) (models.FileUpload, error) {
 	var file models.FileUpload
-	if err := f.Db.First(&file, "file_hash = ?", hash).Error; err != nil {
+	if err := f.Db.First(&file, "file_hash = ?", fileHash).Error; err != nil {
 		return models.FileUpload{}, err
 	}
 	return file, nil
@@ -151,7 +151,7 @@ func (f *fileUploadRepoImpl) DeleteFileUploadByFileHash(fileHash string) (models
 	return file, nil
 }
 
-func NewFileUploadRepo(db *gorm.DB) FileUploadRepo {
+func NewFileUploadRepoImpl(db *gorm.DB) FileUploadRepo {
 	return &fileUploadRepoImpl{Db: db}
 
 }

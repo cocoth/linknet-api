@@ -18,6 +18,7 @@ func sendFileUploadResponse(data models.FileUpload, err error) (response.FileUpl
 	return response.FileUploadResponse{
 		ID:        data.ID,
 		FileName:  data.FileName,
+		FileType:  data.FileType,
 		FileUri:   data.FileUri,
 		FileHash:  data.FileHash,
 		AuthorID:  data.AuthorID,
@@ -32,6 +33,7 @@ func (f *fileUploadServiceImpl) UploadFile(file request.FileUploadRequest) (resp
 	// Save the file using the repository
 	fileRes, err := f.fileRepo.UploadFile(models.FileUpload{
 		FileName: file.FileName,
+		FileType: file.FileType,
 		FileUri:  file.FileUri,
 		FileHash: file.FileHash,
 		AuthorID: &file.AuthorID,
@@ -55,6 +57,7 @@ func (f *fileUploadServiceImpl) GetAllFileUpload() ([]response.FileUploadRespons
 		fileResponses = append(fileResponses, response.FileUploadResponse{
 			ID:        file.ID,
 			FileName:  file.FileName,
+			FileType:  file.FileType,
 			FileUri:   file.FileUri,
 			FileHash:  file.FileHash,
 			AuthorID:  file.AuthorID,
@@ -109,6 +112,7 @@ func (f *fileUploadServiceImpl) GetFilesUploadByAuthorID(authorID string) ([]res
 		fileResponses = append(fileResponses, response.FileUploadResponse{
 			ID:        file.ID,
 			FileName:  file.FileName,
+			FileType:  file.FileType,
 			FileUri:   file.FileUri,
 			FileHash:  file.FileHash,
 			AuthorID:  file.AuthorID,
@@ -133,6 +137,7 @@ func (f *fileUploadServiceImpl) GetFilesUploadByFileName(fileName string) ([]res
 		fileResponses = append(fileResponses, response.FileUploadResponse{
 			ID:        file.ID,
 			FileName:  file.FileName,
+			FileType:  file.FileType,
 			FileUri:   file.FileUri,
 			FileHash:  file.FileHash,
 			AuthorID:  file.AuthorID,
