@@ -50,4 +50,8 @@ func FileRoute(ctrl *controllers.FileController, rg *gin.RouterGroup) {
 	rg.PATCH("/files/:id", ctrl.UpdateFileUpload)
 	// // Get file by qurey params (id, fileid, filename, filehash)
 	rg.DELETE("/files", ctrl.DeleteFileUpload)
+
+	rg.POST("/files/request", ctrl.RequestAccess)
+	rg.POST("/files/approve", ctrl.ApproveAccess)
+	rg.POST("/files/reject", ctrl.RejectAccess)
 }

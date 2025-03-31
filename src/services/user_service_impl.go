@@ -242,7 +242,7 @@ func (u *UsersServiceImpl) CreateUser(user request.UserRequest) (response.UserRe
 func (u *UsersServiceImpl) DeleteUser(id string) (response.UserResponse, error) {
 	user, err := u.UserRepo.DeleteUser(id)
 	if err != nil {
-		return sendUserResponse(user, nil)
+		return response.UserResponse{}, err
 	}
 	return sendUserResponse(user, nil)
 }

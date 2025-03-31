@@ -1,6 +1,8 @@
 package services
 
 import (
+	"time"
+
 	"github.com/cocoth/linknet-api/src/http/request"
 	"github.com/cocoth/linknet-api/src/http/response"
 )
@@ -57,6 +59,15 @@ type FileUploadService interface {
 	DeleteFileUploadByFileHash(fileHash string) (response.FileUploadResponse, error)
 }
 
+type FileUploadPermService interface {
+	RequestAccess(request request.FilePermRequest) error
+	ApproveFileAccess(request request.FilePermRequest) error
+	RejectFileAccess(request request.FilePermRequest) error
+	CheckAccess(request request.FilePermRequest) (bool, error)
+
+	// GetAllFileUploadPerm() ([]response.FileUploadPermResponse, error)
+}
+
 type SurveyService interface {
 	GetAllSurvey() ([]response.SurveyResponse, error)
 	GetSurveyByID(id string) (response.SurveyResponse, error)
@@ -67,7 +78,7 @@ type SurveyService interface {
 	GetSurveyByCustomerName(customerName string) (response.SurveyResponse, error)
 	GetSurveyByAddress(address string) (response.SurveyResponse, error)
 	GetSurveyByNodeFDT(nodeFDT string) (response.SurveyResponse, error)
-	GetSurveyBySurveyDate(surveyDate string) (response.SurveyResponse, error)
+	GetSurveyBySurveyDate(surveyDate time.Time) (response.SurveyResponse, error)
 	GetSurveyBySurveyorID(surveyorID string) (response.SurveyResponse, error)
 
 	GetSurveyByImageID(imageID string) (response.SurveyResponse, error)
@@ -98,13 +109,14 @@ type SurveyReportService interface {
 type NotifyService interface {
 	GetAllNotify() ([]response.NotifyResponse, error)
 	GetNotifyByID(id string) (response.NotifyResponse, error)
-	GetNotifyByUserID(userID string) (response.NotifyResponse, error)
-	GetNotifyByFileID(fileID string) (response.NotifyResponse, error)
-	GetNotifyByNotifyType(notifyType string) (response.NotifyResponse, error)
-	GetNotifyByNotifyStatus(notifyStatus string) (response.NotifyResponse, error)
-	GetNotifyByNotifyMessage(notifyMessage string) (response.NotifyResponse, error)
+	GetNotifyByUserID(userID string) ([]response.NotifyResponse, error)
+	GetNotifyByFileID(fileID string) ([]response.NotifyResponse, error)
+	GetNotifyByNotifyType(notifyType string) ([]response.NotifyResponse, error)
+	GetNotifyByNotifyStatus(notifyStatus string) ([]response.NotifyResponse, error)
+	GetNotifyByNotifyMessage(notifyMessage string) ([]response.NotifyResponse, error)
+	GetNotifyByIsRead(isRead bool) ([]response.NotifyResponse, error)
 
 	CreateNotify(notify request.NotifyRequest) (response.NotifyResponse, error)
-	UpdateNotify(id string, notify request.NotifyRequest) (response.NotifyResponse, error)
+	UpdateNotify(notify request.NotifyRequest) (response.NotifyResponse, error)
 	DeleteNotify(id string) (response.NotifyResponse, error)
 }

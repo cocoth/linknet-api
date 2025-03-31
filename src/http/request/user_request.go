@@ -29,6 +29,7 @@ type UpdateUserRequest struct {
 
 type FileUploadRequest struct {
 	FileName string `json:"file_name"`
+	FileType string `json:"file_type"`
 	FileUri  string `json:"file_uri"`
 	FileHash string `json:"file_hash"`
 	AuthorID string `json:"author_id"`

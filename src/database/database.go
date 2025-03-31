@@ -50,10 +50,17 @@ func ConnectToDB() {
 		os.Exit(1)
 	}
 
-	DB.AutoMigrate(
-		&models.User{},
+	if err := DB.AutoMigrate(
 		&models.Role{},
+		&models.User{},
 		&models.FileUpload{},
+		&models.FileAccessRequest{},
+		&models.FileAccess{},
+		&models.Notify{},
 		&models.Survey{},
-	)
+		&models.SurveyorLink{},
+	); err != nil {
+		utils.Error("Failed to auto-migrate: "+err.Error(), "ConnectToDB")
+		os.Exit(1)
+	}
 }

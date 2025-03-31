@@ -2,7 +2,6 @@ package repo
 
 import (
 	"errors"
-	"time"
 
 	"github.com/cocoth/linknet-api/src/models"
 	"gorm.io/gorm"
@@ -263,12 +262,13 @@ func (u *userRepoImpl) CreateUser(user models.User) (models.User, error) {
 // DeleteUser implements UserRepo.
 func (u *userRepoImpl) DeleteUser(id string) (models.User, error) {
 	var user models.User
-
-	err := u.Db.Model(&user).Where("id = ?", id).Updates(map[string]interface{}{
-		"deleted_at": gorm.DeletedAt{Time: time.Now(), Valid: true},
-		"status":     "inactive",
-	}).Error
-	return user, err
+	if err := u.Db.First(&user, "id = ?", id).Error; err != nil {
+		return models.User{}, err
+	}
+	if err := u.Db.Delete(&user).Error; err != nil {
+		return models.User{}, err
+	}
+	return user, nil
 }
 
 // GetAll implements UserRepo.

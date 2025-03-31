@@ -7,8 +7,16 @@ import (
 
 func SurveyRoute(surveyController *controllers.SurveyController, rg *gin.RouterGroup) {
 	rg.GET("/surveys", surveyController.GetAllSurvey)
-	// rg.GET("/survey/:id", surveyController.GetSurveyByID)
 	rg.POST("/surveys", surveyController.CreateSurvey)
-	// rg.PUT("/survey/:id", surveyController.UpdateSurvey)
-	// rg.DELETE("/survey/:id", surveyController.DeleteSurvey)
+	rg.PATCH("/surveys/:id", surveyController.UpdateSurvey)
+	rg.DELETE("/surveys/:id", surveyController.DeleteSurvey)
+}
+
+func NotificationRoute(notifController *controllers.NotifyController, rg *gin.RouterGroup) {
+	rg.GET("/notif", notifController.GetAllNotify)
+	rg.POST("/notif", notifController.CreateNotify)
+	rg.DELETE("/notif/:id", notifController.DeleteNotify)
+
+	// Websocket
+	rg.GET("/ws/notif", controllers.HandleWebsocketConnection)
 }

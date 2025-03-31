@@ -1,6 +1,10 @@
 package repo
 
-import "github.com/cocoth/linknet-api/src/models"
+import (
+	"time"
+
+	"github.com/cocoth/linknet-api/src/models"
+)
 
 type UserRepo interface {
 	GetAllRole() ([]models.Role, error)
@@ -62,8 +66,16 @@ type FileUploadRepo interface {
 	DeleteFileUploadByFileHash(fileHash string) (models.FileUpload, error)
 }
 
+type FilePermRepo interface {
+	RequestAccess(userID, fileID string) error
+	ApproveAccess(userID, fileID string) error
+	RejectAccess(userID, fileID string) error
+	CheckAccess(userID, fileID string) (bool, error)
+}
+
 type SurveyRepo interface {
 	GetAllSurvey() ([]models.Survey, error)
+	GetAllSurveyWithPreload(preload string) ([]models.Survey, error)
 	GetSurveyByID(id string) (models.Survey, error)
 	GetSurveyByTitle(title string) (models.Survey, error)
 	GetSurveyByFormNumber(formNumber string) (models.Survey, error)
@@ -75,7 +87,7 @@ type SurveyRepo interface {
 	GetSurveyByAddress(address string) (models.Survey, error)
 
 	GetSurveyByNodeFDT(nodeFDT string) (models.Survey, error)
-	GetSurveyBySurveyDate(surveyDate string) (models.Survey, error)
+	GetSurveyBySurveyDate(surveyDate time.Time) (models.Survey, error)
 	GetSurveyBySurveyorID(surveyorID string) (models.Survey, error)
 
 	GetSurveyByImageID(imageID string) (models.Survey, error)
@@ -106,11 +118,12 @@ type SurveyReportRepo interface {
 type NotifyRepo interface {
 	GetAllNotify() ([]models.Notify, error)
 	GetNotifyByID(id string) (models.Notify, error)
-	GetNotifyByUserID(userID string) (models.Notify, error)
-	GetNotifyByFileID(fileID string) (models.Notify, error)
-	GetNotifyByNotifyType(notifyType string) (models.Notify, error)
-	GetNotifyByNotifyStatus(notifyStatus string) (models.Notify, error)
-	GetNotifyByNotifyMessage(notifyMessage string) (models.Notify, error)
+	GetNotifyByUserID(userID string) ([]models.Notify, error)
+	GetNotifyByFileID(fileID string) ([]models.Notify, error)
+	GetNotifyByNotifyType(notifyType string) ([]models.Notify, error)
+	GetNotifyByNotifyStatus(notifyStatus string) ([]models.Notify, error)
+	GetNotifyByNotifyMessage(notifyMessage string) ([]models.Notify, error)
+	GetNotifyByIsRead(isRead bool) ([]models.Notify, error)
 
 	CreateNotify(notify models.Notify) (models.Notify, error)
 	UpdateNotify(notify models.Notify) (models.Notify, error)

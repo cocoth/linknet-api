@@ -5,12 +5,12 @@ import (
 	"gorm.io/gorm"
 )
 
-type NotifyRepoImpl struct {
+type notifyRepoImpl struct {
 	db *gorm.DB
 }
 
 // GetAllNotify implements NotifyRepo.
-func (n *NotifyRepoImpl) GetAllNotify() ([]models.Notify, error) {
+func (n *notifyRepoImpl) GetAllNotify() ([]models.Notify, error) {
 	var notifies []models.Notify
 
 	if err := n.db.Find(&notifies).Error; err != nil {
@@ -20,17 +20,17 @@ func (n *NotifyRepoImpl) GetAllNotify() ([]models.Notify, error) {
 }
 
 // GetNotifyByFileID implements NotifyRepo.
-func (n *NotifyRepoImpl) GetNotifyByFileID(fileID string) (models.Notify, error) {
-	var notify models.Notify
+func (n *notifyRepoImpl) GetNotifyByFileID(fileID string) ([]models.Notify, error) {
+	var notify []models.Notify
 
-	if err := n.db.First(&notify, "file_id = ?", fileID).Error; err != nil {
-		return models.Notify{}, err
+	if err := n.db.Find(&notify, "file_id = ?", fileID).Error; err != nil {
+		return nil, err
 	}
 	return notify, nil
 }
 
 // GetNotifyByID implements NotifyRepo.
-func (n *NotifyRepoImpl) GetNotifyByID(id string) (models.Notify, error) {
+func (n *notifyRepoImpl) GetNotifyByID(id string) (models.Notify, error) {
 	var notify models.Notify
 
 	if err := n.db.First(&notify, "id = ?", id).Error; err != nil {
@@ -40,64 +40,69 @@ func (n *NotifyRepoImpl) GetNotifyByID(id string) (models.Notify, error) {
 }
 
 // GetNotifyByNotifyMessage implements NotifyRepo.
-func (n *NotifyRepoImpl) GetNotifyByNotifyMessage(notifyMessage string) (models.Notify, error) {
-	var notify models.Notify
+func (n *notifyRepoImpl) GetNotifyByNotifyMessage(notifyMessage string) ([]models.Notify, error) {
+	var notify []models.Notify
 
-	if err := n.db.Where("notify_message LIKE ?", "%"+notifyMessage+"%").First(&notify).Error; err != nil {
-		return models.Notify{}, err
+	if err := n.db.Where("notify_message LIKE ?", "%"+notifyMessage+"%").Find(&notify).Error; err != nil {
+		return nil, err
 	}
 	return notify, nil
 }
 
 // GetNotifyByNotifyStatus implements NotifyRepo.
-func (n *NotifyRepoImpl) GetNotifyByNotifyStatus(notifyStatus string) (models.Notify, error) {
-	var notify models.Notify
+func (n *notifyRepoImpl) GetNotifyByNotifyStatus(notifyStatus string) ([]models.Notify, error) {
+	var notify []models.Notify
 
-	if err := n.db.First(&notify, "notify_status = ?", notifyStatus).Error; err != nil {
-		return models.Notify{}, err
+	if err := n.db.Find(&notify, "notify_status = ?", notifyStatus).Error; err != nil {
+		return nil, err
 	}
 	return notify, nil
 }
 
 // GetNotifyByNotifyType implements NotifyRepo.
-func (n *NotifyRepoImpl) GetNotifyByNotifyType(notifyType string) (models.Notify, error) {
-	var notify models.Notify
+func (n *notifyRepoImpl) GetNotifyByNotifyType(notifyType string) ([]models.Notify, error) {
+	var notify []models.Notify
 
-	if err := n.db.First(&notify, "notify_type = ?", notifyType).Error; err != nil {
-		return models.Notify{}, err
+	if err := n.db.Find(&notify, "notify_type = ?", notifyType).Error; err != nil {
+		return nil, err
 	}
 	return notify, nil
 }
 
 // GetNotifyByUserID implements NotifyRepo.
-func (n *NotifyRepoImpl) GetNotifyByUserID(userID string) (models.Notify, error) {
-	var notify models.Notify
+func (n *notifyRepoImpl) GetNotifyByUserID(userID string) ([]models.Notify, error) {
+	var notify []models.Notify
 
-	if err := n.db.First(&notify, "user_id = ?", userID).Error; err != nil {
-		return models.Notify{}, err
+	if err := n.db.Find(&notify, "user_id = ?", userID).Error; err != nil {
+		return nil, err
+	}
+	return notify, nil
+}
+
+// GetNotifyByIsRead implements NotifyRepo.
+func (n *notifyRepoImpl) GetNotifyByIsRead(isRead bool) ([]models.Notify, error) {
+	var notify []models.Notify
+
+	if err := n.db.Find(&notify, "is_read = ?", isRead).Error; err != nil {
+		return nil, err
 	}
 	return notify, nil
 }
 
 // CreateNotify implements NotifyRepo.
-func (n *NotifyRepoImpl) CreateNotify(notify models.Notify) (models.Notify, error) {
-	if err := n.db.Create(&notify).Error; err != nil {
-		return models.Notify{}, err
-	}
-	return notify, nil
+func (n *notifyRepoImpl) CreateNotify(notify models.Notify) (models.Notify, error) {
+	err := n.db.Create(&notify).Error
+	return notify, err
 }
 
 // UpdateNotify implements NotifyRepo.
-func (n *NotifyRepoImpl) UpdateNotify(notify models.Notify) (models.Notify, error) {
+func (n *notifyRepoImpl) UpdateNotify(notify models.Notify) (models.Notify, error) {
 	err := n.db.Model(&notify).Where("id = ?", notify.ID).Updates(notify).Error
-	if err != nil {
-		return models.Notify{}, err
-	}
-	return notify, nil
+	return notify, err
 }
 
 // DeleteNotify implements NotifyRepo.
-func (n *NotifyRepoImpl) DeleteNotify(id string) (models.Notify, error) {
+func (n *notifyRepoImpl) DeleteNotify(id string) (models.Notify, error) {
 	var notify models.Notify
 
 	if err := n.db.First(&notify, "id = ?", id).Error; err != nil {
@@ -111,5 +116,5 @@ func (n *NotifyRepoImpl) DeleteNotify(id string) (models.Notify, error) {
 }
 
 func NewNotifyRepoImpl(db *gorm.DB) NotifyRepo {
-	return &NotifyRepoImpl{db: db}
+	return &notifyRepoImpl{db: db}
 }

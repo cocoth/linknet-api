@@ -125,6 +125,9 @@ func Encrypt(plaintext, key string) (string, error) {
 
 // Decrypt decrypts ciphertext using AES encryption
 func Decrypt(ciphertext, key string) (string, error) {
+	if ciphertext == "" {
+		return "", errors.New("ciphertext is empty")
+	}
 	block, err := aes.NewCipher([]byte(key))
 	if err != nil {
 		return "", err

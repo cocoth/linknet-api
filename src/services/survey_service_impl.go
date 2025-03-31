@@ -1,6 +1,8 @@
 package services
 
 import (
+	"time"
+
 	"github.com/cocoth/linknet-api/src/http/request"
 	"github.com/cocoth/linknet-api/src/http/response"
 	"github.com/cocoth/linknet-api/src/models"
@@ -17,6 +19,17 @@ func sendSurveyResponse(survey models.Survey, err error) (response.SurveyRespons
 		return response.SurveyResponse{}, err
 	}
 
+	var surveyors []response.SurveyorLinkResponse
+	for _, surveyor := range survey.Surveyors {
+		surveyors = append(surveyors, response.SurveyorLinkResponse{
+			ID:         surveyor.ID,
+			SurveyID:   surveyor.SurveyID,
+			SurveyorID: surveyor.SurveyorID,
+			CreatedAt:  surveyor.CreatedAt,
+			UpdatedAt:  surveyor.UpdatedAt,
+			DeletedAt:  surveyor.DeletedAt,
+		})
+	}
 	return response.SurveyResponse{
 		ID:           survey.ID,
 		Title:        survey.Title,
@@ -27,24 +40,31 @@ func sendSurveyResponse(survey models.Survey, err error) (response.SurveyRespons
 		Address:      survey.Address,
 		NodeFDT:      survey.NodeFDT,
 		SurveyDate:   survey.SurveyDate,
-		SurveyorID:   survey.SurveyorID,
-		ImageID:      *survey.ImageID,
+		Surveyors:    surveyors,
+		ImageID:      survey.ImageID,
 		CreatedAt:    survey.CreatedAt,
 		UpdatedAt:    survey.UpdatedAt,
 		DeletedAt:    survey.DeletedAt,
 	}, nil
 }
 
-// GetAllSurvey implements SurveyService.
-func (s *SurveyServiceImpl) GetAllSurvey() ([]response.SurveyResponse, error) {
-	var surveys []response.SurveyResponse
-
-	survey, err := s.surveyRepo.GetAllSurvey()
+func sendSurveysResponse(surveyModel []models.Survey, err error) ([]response.SurveyResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	for _, survey := range survey {
+	var surveys []response.SurveyResponse
+	for _, survey := range surveyModel {
+		var surveyors []response.SurveyorLinkResponse
+		for _, surveyor := range survey.Surveyors {
+			surveyors = append(surveyors, response.SurveyorLinkResponse{
+				ID:         surveyor.ID,
+				SurveyID:   surveyor.SurveyID,
+				SurveyorID: surveyor.SurveyorID,
+				CreatedAt:  surveyor.CreatedAt,
+				UpdatedAt:  surveyor.UpdatedAt,
+				DeletedAt:  surveyor.DeletedAt,
+			})
+		}
 		surveys = append(surveys, response.SurveyResponse{
 			ID:           survey.ID,
 			Title:        survey.Title,
@@ -55,15 +75,21 @@ func (s *SurveyServiceImpl) GetAllSurvey() ([]response.SurveyResponse, error) {
 			Address:      survey.Address,
 			NodeFDT:      survey.NodeFDT,
 			SurveyDate:   survey.SurveyDate,
-			SurveyorID:   survey.SurveyorID,
-			ImageID:      *survey.ImageID,
+			Surveyors:    surveyors,
+			ImageID:      survey.ImageID,
 			CreatedAt:    survey.CreatedAt,
 			UpdatedAt:    survey.UpdatedAt,
 			DeletedAt:    survey.DeletedAt,
 		})
 	}
-
 	return surveys, nil
+
+}
+
+// GetAllSurvey implements SurveyService.
+func (s *SurveyServiceImpl) GetAllSurvey() ([]response.SurveyResponse, error) {
+	survey, err := s.surveyRepo.GetAllSurvey()
+	return sendSurveysResponse(survey, err)
 }
 
 // GetSurveyByAddress implements SurveyService.
@@ -110,7 +136,7 @@ func (s *SurveyServiceImpl) GetSurveyByQuestorName(questorName string) (response
 }
 
 // GetSurveyBySurveyDate implements SurveyService.
-func (s *SurveyServiceImpl) GetSurveyBySurveyDate(surveyDate string) (response.SurveyResponse, error) {
+func (s *SurveyServiceImpl) GetSurveyBySurveyDate(surveyDate time.Time) (response.SurveyResponse, error) {
 	survey, err := s.surveyRepo.GetSurveyBySurveyDate(surveyDate)
 	return sendSurveyResponse(survey, err)
 }
@@ -123,33 +149,8 @@ func (s *SurveyServiceImpl) GetSurveyBySurveyorID(surveyorID string) (response.S
 
 // GetSurveysBySurveyorName implements SurveyService.
 func (s *SurveyServiceImpl) GetSurveysBySurveyorName(surveyorName string) ([]response.SurveyResponse, error) {
-	var surveys []response.SurveyResponse
-
 	survey, err := s.surveyRepo.GetSurveysBySurveyorName(surveyorName)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, survey := range survey {
-		surveys = append(surveys, response.SurveyResponse{
-			ID:           survey.ID,
-			Title:        survey.Title,
-			FormNumber:   survey.FormNumber,
-			QuestorName:  survey.QuestorName,
-			FAT:          survey.FAT,
-			CustomerName: survey.CustomerName,
-			Address:      survey.Address,
-			NodeFDT:      survey.NodeFDT,
-			SurveyDate:   survey.SurveyDate,
-			SurveyorID:   survey.SurveyorID,
-			ImageID:      *survey.ImageID,
-			CreatedAt:    survey.CreatedAt,
-			UpdatedAt:    survey.UpdatedAt,
-			DeletedAt:    survey.DeletedAt,
-		})
-	}
-
-	return surveys, nil
+	return sendSurveysResponse(survey, err)
 }
 
 // GetSurveyByTitle implements SurveyService.
@@ -166,126 +167,26 @@ func (s *SurveyServiceImpl) GetSurveyByImageID(imageID string) (response.SurveyR
 
 // GetSurveysByAddress implements SurveyService.
 func (s *SurveyServiceImpl) GetSurveysByAddress(address string) ([]response.SurveyResponse, error) {
-	var surveys []response.SurveyResponse
-
 	survey, err := s.surveyRepo.GetSurveysByAddress(address)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, survey := range survey {
-		surveys = append(surveys, response.SurveyResponse{
-			ID:           survey.ID,
-			Title:        survey.Title,
-			FormNumber:   survey.FormNumber,
-			QuestorName:  survey.QuestorName,
-			FAT:          survey.FAT,
-			CustomerName: survey.CustomerName,
-			Address:      survey.Address,
-			NodeFDT:      survey.NodeFDT,
-			SurveyDate:   survey.SurveyDate,
-			SurveyorID:   survey.SurveyorID,
-			ImageID:      *survey.ImageID,
-			CreatedAt:    survey.CreatedAt,
-			UpdatedAt:    survey.UpdatedAt,
-			DeletedAt:    survey.DeletedAt,
-		})
-	}
-
-	return surveys, nil
+	return sendSurveysResponse(survey, err)
 }
 
 // GetSurveysByCustomerName implements SurveyService.
 func (s *SurveyServiceImpl) GetSurveysByCustomerName(customerName string) ([]response.SurveyResponse, error) {
-	var surveys []response.SurveyResponse
-
 	survey, err := s.surveyRepo.GetSurveysByCustomerName(customerName)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, survey := range survey {
-		surveys = append(surveys, response.SurveyResponse{
-			ID:           survey.ID,
-			Title:        survey.Title,
-			FormNumber:   survey.FormNumber,
-			QuestorName:  survey.QuestorName,
-			FAT:          survey.FAT,
-			CustomerName: survey.CustomerName,
-			Address:      survey.Address,
-			NodeFDT:      survey.NodeFDT,
-			SurveyDate:   survey.SurveyDate,
-			SurveyorID:   survey.SurveyorID,
-			ImageID:      *survey.ImageID,
-			CreatedAt:    survey.CreatedAt,
-			UpdatedAt:    survey.UpdatedAt,
-			DeletedAt:    survey.DeletedAt,
-		})
-	}
-
-	return surveys, nil
+	return sendSurveysResponse(survey, err)
 }
 
 // GetSurveysByQuestorName implements SurveyService.
 func (s *SurveyServiceImpl) GetSurveysByQuestorName(questorName string) ([]response.SurveyResponse, error) {
-	var surveys []response.SurveyResponse
-
 	survey, err := s.surveyRepo.GetSurveysByQuestorName(questorName)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, survey := range survey {
-		surveys = append(surveys, response.SurveyResponse{
-			ID:           survey.ID,
-			Title:        survey.Title,
-			FormNumber:   survey.FormNumber,
-			QuestorName:  survey.QuestorName,
-			FAT:          survey.FAT,
-			CustomerName: survey.CustomerName,
-			Address:      survey.Address,
-			NodeFDT:      survey.NodeFDT,
-			SurveyDate:   survey.SurveyDate,
-			SurveyorID:   survey.SurveyorID,
-			ImageID:      *survey.ImageID,
-			CreatedAt:    survey.CreatedAt,
-			UpdatedAt:    survey.UpdatedAt,
-			DeletedAt:    survey.DeletedAt,
-		})
-	}
-
-	return surveys, nil
+	return sendSurveysResponse(survey, err)
 }
 
 // GetSurveysByTitle implements SurveyService.
 func (s *SurveyServiceImpl) GetSurveysByTitle(title string) ([]response.SurveyResponse, error) {
-	var surveys []response.SurveyResponse
-
 	survey, err := s.surveyRepo.GetSurveysByTitle(title)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, survey := range survey {
-		surveys = append(surveys, response.SurveyResponse{
-			ID:           survey.ID,
-			Title:        survey.Title,
-			FormNumber:   survey.FormNumber,
-			QuestorName:  survey.QuestorName,
-			FAT:          survey.FAT,
-			CustomerName: survey.CustomerName,
-			Address:      survey.Address,
-			NodeFDT:      survey.NodeFDT,
-			SurveyDate:   survey.SurveyDate,
-			SurveyorID:   survey.SurveyorID,
-			ImageID:      *survey.ImageID,
-			CreatedAt:    survey.CreatedAt,
-			UpdatedAt:    survey.UpdatedAt,
-			DeletedAt:    survey.DeletedAt,
-		})
-	}
-
-	return surveys, nil
+	return sendSurveysResponse(survey, err)
 }
 
 // CreateSurvey implements SurveyService.
@@ -299,7 +200,15 @@ func (s *SurveyServiceImpl) CreateSurvey(survey request.SurveyRequest) (response
 	survey.CustomerName = utils.SanitizeString(survey.CustomerName)
 	survey.Address = utils.SanitizeString(survey.Address)
 	survey.NodeFDT = utils.SanitizeString(survey.NodeFDT)
-	survey.SurveyorID = utils.SanitizeString(survey.SurveyorID)
+
+	var surveyors []models.SurveyorLink
+	for _, surveyor := range survey.Surveyors {
+		surveyorModel := models.SurveyorLink{
+			SurveyID:   surveyor.SurveyID,
+			SurveyorID: surveyor.SurveyorID,
+		}
+		surveyors = append(surveyors, surveyorModel)
+	}
 
 	surveyModel := models.Survey{
 		Title:        survey.Title,
@@ -310,7 +219,7 @@ func (s *SurveyServiceImpl) CreateSurvey(survey request.SurveyRequest) (response
 		Address:      survey.Address,
 		NodeFDT:      survey.NodeFDT,
 		SurveyDate:   survey.SurveyDate,
-		SurveyorID:   survey.SurveyorID,
+		Surveyors:    surveyors,
 		ImageID:      &survey.ImageID,
 	}
 
@@ -321,12 +230,65 @@ func (s *SurveyServiceImpl) CreateSurvey(survey request.SurveyRequest) (response
 
 // UpdateSurvey implements SurveyService.
 func (s *SurveyServiceImpl) UpdateSurvey(id string, survey request.UpdateSurveyRequest) (response.SurveyResponse, error) {
-	panic("unimplemented")
+	surveyData, err := s.surveyRepo.GetSurveyByID(id)
+	if err != nil {
+		return response.SurveyResponse{}, err
+	}
+
+	if survey.Title != nil {
+		sanitizedTitle := utils.SanitizeString(*survey.Title)
+		surveyData.Title = sanitizedTitle
+	}
+	if survey.Address != nil {
+		sanitizedAddress := utils.SanitizeString(*survey.Address)
+		surveyData.Address = sanitizedAddress
+	}
+	if survey.CustomerName != nil {
+		sanitizedCustomerName := utils.SanitizeString(*survey.CustomerName)
+		surveyData.CustomerName = sanitizedCustomerName
+	}
+	if survey.FAT != nil {
+		sanitizedFAT := utils.SanitizeString(*survey.FAT)
+		surveyData.FAT = sanitizedFAT
+	}
+	if survey.FormNumber != nil {
+		sanitizedFormNumber := utils.SanitizeString(*survey.FormNumber)
+		surveyData.FormNumber = sanitizedFormNumber
+	}
+	if survey.NodeFDT != nil {
+		sanitizedNodeFDT := utils.SanitizeString(*survey.NodeFDT)
+		surveyData.NodeFDT = sanitizedNodeFDT
+	}
+	if survey.QuestorName != nil {
+		sanitizedQuestorName := utils.SanitizeString(*survey.QuestorName)
+		surveyData.QuestorName = sanitizedQuestorName
+	}
+	if survey.SurveyDate != nil {
+		surveyData.SurveyDate = *survey.SurveyDate
+	}
+	if survey.Surveyors != nil {
+		var surveyors []models.SurveyorLink
+		for _, surveyor := range survey.Surveyors {
+			sanitizedSurveyorID := utils.SanitizeString(surveyor.SurveyorID)
+			surveyors = append(surveyors, models.SurveyorLink{
+				SurveyID:   id,
+				SurveyorID: sanitizedSurveyorID,
+			})
+		}
+		surveyData.Surveyors = surveyors
+	}
+	if survey.ImageID != nil {
+		surveyData.ImageID = survey.ImageID
+	}
+
+	updatedSurvey, err := s.surveyRepo.UpdateSurvey(surveyData)
+	return sendSurveyResponse(updatedSurvey, err)
 }
 
 // DeleteSurvey implements SurveyService.
 func (s *SurveyServiceImpl) DeleteSurvey(id string) (response.SurveyResponse, error) {
-	panic("unimplemented")
+	survey, err := s.surveyRepo.DeleteSurvey(id)
+	return sendSurveyResponse(survey, err)
 }
 
 func NewSurveyServiceImpl(surveyRepo repo.SurveyRepo) SurveyService {

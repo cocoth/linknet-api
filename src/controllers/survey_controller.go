@@ -1,7 +1,9 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/cocoth/linknet-api/src/controllers/helper"
 	"github.com/cocoth/linknet-api/src/http/request"
@@ -95,7 +97,12 @@ func (s *SurveyController) GetAllSurvey(c *gin.Context) {
 		helper.RespondWithSuccess(c, http.StatusOK, survey)
 		return
 	} else if qSurveyDate != "" {
-		survey, err := s.surveyService.GetSurveyBySurveyDate(qSurveyDate)
+		parsedDate, parseErr := time.Parse("2006-01-02", qSurveyDate)
+		if parseErr != nil {
+			helper.RespondWithError(c, http.StatusBadRequest, "Invalid date format. Use YYYY-MM-DD.")
+			return
+		}
+		survey, err := s.surveyService.GetSurveyBySurveyDate(parsedDate)
 		if err != nil {
 			helper.RespondWithError(c, http.StatusBadRequest, err.Error())
 			return
@@ -138,9 +145,14 @@ func (s *SurveyController) CreateSurvey(c *gin.Context) {
 		helper.RespondWithError(c, http.StatusUnauthorized, "No token provided")
 		return
 	}
-	_, _, errToken := s.userService.CheckToken(token)
+	isadmin, _, errToken := s.userService.IsAdmin(token)
 	if errToken != nil {
 		helper.RespondWithError(c, http.StatusUnauthorized, errToken.Error())
+		return
+	}
+
+	if !isadmin {
+		helper.RespondWithError(c, http.StatusUnauthorized, "only admin can create survey!")
 		return
 	}
 
@@ -149,6 +161,13 @@ func (s *SurveyController) CreateSurvey(c *gin.Context) {
 		return
 	}
 
+	for _, surveyor := range surveyReq.Surveyors {
+		_, err := s.userService.GetUserById(surveyor.SurveyorID)
+		if err != nil {
+			helper.RespondWithError(c, http.StatusBadRequest, fmt.Sprintf("Surveyor with ID %s does not exist", surveyor.SurveyorID))
+			return
+		}
+	}
 	surveyRes, err := s.surveyService.CreateSurvey(surveyReq)
 	if err != nil {
 		helper.RespondWithError(c, http.StatusInternalServerError, err.Error())
@@ -156,4 +175,68 @@ func (s *SurveyController) CreateSurvey(c *gin.Context) {
 	}
 
 	helper.RespondWithSuccess(c, http.StatusCreated, surveyRes)
+}
+
+func (s *SurveyController) UpdateSurvey(c *gin.Context) {
+	var surveyReq request.UpdateSurveyRequest
+
+	token, err := c.Cookie("session_token")
+	if err != nil {
+		helper.RespondWithError(c, http.StatusUnauthorized, "No token provided")
+		return
+	}
+	isadmin, _, errToken := s.userService.IsAdmin(token)
+	if errToken != nil {
+		helper.RespondWithError(c, http.StatusUnauthorized, errToken.Error())
+		return
+	}
+	if !isadmin {
+		helper.RespondWithError(c, http.StatusUnauthorized, "only admin can update survey!")
+		return
+	}
+
+	if err := c.ShouldBindJSON(&surveyReq); err != nil {
+		helper.RespondWithError(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	surveyID := c.Param("id")
+	surveyRes, err := s.surveyService.UpdateSurvey(surveyID, surveyReq)
+	if err != nil {
+		helper.RespondWithError(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	helper.RespondWithSuccess(c, http.StatusOK, surveyRes)
+}
+
+func (s *SurveyController) DeleteSurvey(c *gin.Context) {
+	surveyID := c.Param("id")
+
+	token, err := c.Cookie("session_token")
+	if err != nil {
+		helper.RespondWithError(c, http.StatusUnauthorized, "No token provided")
+		return
+	}
+	isadmin, _, errToken := s.userService.IsAdmin(token)
+	if errToken != nil {
+		helper.RespondWithError(c, http.StatusUnauthorized, errToken.Error())
+		return
+	}
+	if !isadmin {
+		helper.RespondWithError(c, http.StatusUnauthorized, "only admin can delete survey!")
+		return
+	}
+
+	surveyRes, err := s.surveyService.DeleteSurvey(surveyID)
+	if err != nil {
+		if err.Error() == "record not found" {
+			helper.RespondWithError(c, http.StatusNotFound, err.Error())
+		} else {
+			helper.RespondWithError(c, http.StatusInternalServerError, err.Error())
+		}
+		return
+	}
+
+	helper.RespondWithSuccess(c, http.StatusOK, surveyRes)
 }

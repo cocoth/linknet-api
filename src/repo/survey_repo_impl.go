@@ -1,6 +1,8 @@
 package repo
 
 import (
+	"time"
+
 	"github.com/cocoth/linknet-api/src/models"
 	"gorm.io/gorm"
 )
@@ -9,10 +11,19 @@ type SurveyRepoImpl struct {
 	db *gorm.DB
 }
 
+// GetAllSurveyWithPreload implements SurveyRepo.
+func (s *SurveyRepoImpl) GetAllSurveyWithPreload(preload string) ([]models.Survey, error) {
+	var surveys []models.Survey
+	if err := s.db.Preload(preload).Find(&surveys).Error; err != nil {
+		return nil, err
+	}
+	return surveys, nil
+}
+
 // GetAllSurvey implements SurveyRepo.
 func (s *SurveyRepoImpl) GetAllSurvey() ([]models.Survey, error) {
-	var surveys []models.Survey
-	if err := s.db.Find(&surveys).Error; err != nil {
+	surveys, err := s.GetAllSurveyWithPreload("Surveyors")
+	if err != nil {
 		return nil, err
 	}
 	return surveys, nil
@@ -21,7 +32,7 @@ func (s *SurveyRepoImpl) GetAllSurvey() ([]models.Survey, error) {
 // GetSurveyByAddress implements SurveyRepo.
 func (s *SurveyRepoImpl) GetSurveyByAddress(address string) (models.Survey, error) {
 	var survey models.Survey
-	if err := s.db.First(&survey, "address = ?", address).Error; err != nil {
+	if err := s.db.Preload("Surveyors").First(&survey, "address = ?", address).Error; err != nil {
 		return models.Survey{}, err
 	}
 	return survey, nil
@@ -30,7 +41,7 @@ func (s *SurveyRepoImpl) GetSurveyByAddress(address string) (models.Survey, erro
 // GetSurveyByCustomerName implements SurveyRepo.
 func (s *SurveyRepoImpl) GetSurveyByCustomerName(customerName string) (models.Survey, error) {
 	var survey models.Survey
-	if err := s.db.First(&survey, "customer_name = ?", customerName).Error; err != nil {
+	if err := s.db.Preload("Surveyors").First(&survey, "customer_name = ?", customerName).Error; err != nil {
 		return models.Survey{}, err
 	}
 	return survey, nil
@@ -39,7 +50,7 @@ func (s *SurveyRepoImpl) GetSurveyByCustomerName(customerName string) (models.Su
 // GetSurveyByFAT implements SurveyRepo.
 func (s *SurveyRepoImpl) GetSurveyByFAT(fat string) (models.Survey, error) {
 	var survey models.Survey
-	if err := s.db.First(&survey, "fat = ?", fat).Error; err != nil {
+	if err := s.db.Preload("Surveyors").First(&survey, "fat = ?", fat).Error; err != nil {
 		return models.Survey{}, err
 	}
 	return survey, nil
@@ -48,7 +59,7 @@ func (s *SurveyRepoImpl) GetSurveyByFAT(fat string) (models.Survey, error) {
 // GetSurveyByFormNumber implements SurveyRepo.
 func (s *SurveyRepoImpl) GetSurveyByFormNumber(formNumber string) (models.Survey, error) {
 	var survey models.Survey
-	if err := s.db.First(&survey, "formn_number = ?", formNumber).Error; err != nil {
+	if err := s.db.Preload("Surveyors").First(&survey, "form_number = ?", formNumber).Error; err != nil {
 		return models.Survey{}, err
 	}
 	return survey, nil
@@ -57,7 +68,7 @@ func (s *SurveyRepoImpl) GetSurveyByFormNumber(formNumber string) (models.Survey
 // GetSurveyByID implements SurveyRepo.
 func (s *SurveyRepoImpl) GetSurveyByID(id string) (models.Survey, error) {
 	var survey models.Survey
-	if err := s.db.First(&survey, "id = ?", id).Error; err != nil {
+	if err := s.db.Preload("Surveyors").First(&survey, "id = ?", id).Error; err != nil {
 		return models.Survey{}, err
 	}
 	return survey, nil
@@ -66,7 +77,7 @@ func (s *SurveyRepoImpl) GetSurveyByID(id string) (models.Survey, error) {
 // GetSurveyByNodeFDT implements SurveyRepo.
 func (s *SurveyRepoImpl) GetSurveyByNodeFDT(nodeFDT string) (models.Survey, error) {
 	var survey models.Survey
-	if err := s.db.First(&survey, "node_fdt = ?", nodeFDT).Error; err != nil {
+	if err := s.db.Preload("Surveyors").First(&survey, "node_fdt = ?", nodeFDT).Error; err != nil {
 		return models.Survey{}, err
 	}
 	return survey, nil
@@ -75,16 +86,16 @@ func (s *SurveyRepoImpl) GetSurveyByNodeFDT(nodeFDT string) (models.Survey, erro
 // GetSurveyByQuestorName implements SurveyRepo.
 func (s *SurveyRepoImpl) GetSurveyByQuestorName(questorName string) (models.Survey, error) {
 	var survey models.Survey
-	if err := s.db.First(&survey, "questor_name = ?", questorName).Error; err != nil {
+	if err := s.db.Preload("Surveyors").First(&survey, "questor_name = ?", questorName).Error; err != nil {
 		return models.Survey{}, err
 	}
 	return survey, nil
 }
 
 // GetSurveyBySurveyDate implements SurveyRepo.
-func (s *SurveyRepoImpl) GetSurveyBySurveyDate(surveyDate string) (models.Survey, error) {
+func (s *SurveyRepoImpl) GetSurveyBySurveyDate(surveyDate time.Time) (models.Survey, error) {
 	var survey models.Survey
-	if err := s.db.First(&survey, "survey_date = ?", surveyDate).Error; err != nil {
+	if err := s.db.Preload("Surveyors").First(&survey, "survey_date = ?", surveyDate).Error; err != nil {
 		return models.Survey{}, err
 	}
 	return survey, nil
@@ -93,7 +104,8 @@ func (s *SurveyRepoImpl) GetSurveyBySurveyDate(surveyDate string) (models.Survey
 // GetSurveyBySurveyorID implements SurveyRepo.
 func (s *SurveyRepoImpl) GetSurveyBySurveyorID(surveyorID string) (models.Survey, error) {
 	var survey models.Survey
-	if err := s.db.First(&survey, "surveyor_id = ?", surveyorID).Error; err != nil {
+	if err := s.db.Preload("Surveyors").Joins("JOIN surveyor_links ON surveyor_links.survey_id = surveys.id").
+		Where("surveyor_links.surveyor_id = ?", surveyorID).First(&survey).Error; err != nil {
 		return models.Survey{}, err
 	}
 	return survey, nil
@@ -102,7 +114,9 @@ func (s *SurveyRepoImpl) GetSurveyBySurveyorID(surveyorID string) (models.Survey
 // GetSurveyBySurveyorName implements SurveyRepo.
 func (s *SurveyRepoImpl) GetSurveyBySurveyorName(surveyorName string) (models.Survey, error) {
 	var survey models.Survey
-	if err := s.db.Joins("JOIN users ON users.id = surveys.surveyor_id").Where("users.name = ?", surveyorName).First(&survey).Error; err != nil {
+	if err := s.db.Preload("Surveyors").Joins("JOIN surveyor_links ON surveyor_links.survey_id = surveys.id").
+		Joins("JOIN users ON users.id = surveyor_links.surveyor_id").
+		Where("users.name = ?", surveyorName).First(&survey).Error; err != nil {
 		return models.Survey{}, err
 	}
 	return survey, nil
@@ -111,7 +125,7 @@ func (s *SurveyRepoImpl) GetSurveyBySurveyorName(surveyorName string) (models.Su
 // GetSurveyByTitle implements SurveyRepo.
 func (s *SurveyRepoImpl) GetSurveyByTitle(title string) (models.Survey, error) {
 	var survey models.Survey
-	if err := s.db.First(&survey, "title = ?", title).Error; err != nil {
+	if err := s.db.Preload("Surveyors").First(&survey, "title = ?", title).Error; err != nil {
 		return models.Survey{}, err
 	}
 	return survey, nil
@@ -120,7 +134,7 @@ func (s *SurveyRepoImpl) GetSurveyByTitle(title string) (models.Survey, error) {
 // GetSurveyByImageID implements SurveyRepo.
 func (s *SurveyRepoImpl) GetSurveyByImageID(imageID string) (models.Survey, error) {
 	var survey models.Survey
-	if err := s.db.First(&survey, "image_id = ?", imageID).Error; err != nil {
+	if err := s.db.Preload("Surveyors").First(&survey, "image_id = ?", imageID).Error; err != nil {
 		return models.Survey{}, err
 	}
 	return survey, nil
@@ -130,7 +144,7 @@ func (s *SurveyRepoImpl) GetSurveyByImageID(imageID string) (models.Survey, erro
 func (s *SurveyRepoImpl) GetSurveysByAddress(address string) ([]models.Survey, error) {
 	var surveys []models.Survey
 
-	err := s.db.Where("address LIKE ?", "%"+address+"%").Find(&surveys).Error
+	err := s.db.Preload("Surveyors").Where("address LIKE ?", "%"+address+"%").Find(&surveys).Error
 	if err != nil {
 		return nil, err
 	}
@@ -141,7 +155,7 @@ func (s *SurveyRepoImpl) GetSurveysByAddress(address string) ([]models.Survey, e
 func (s *SurveyRepoImpl) GetSurveysByCustomerName(customerName string) ([]models.Survey, error) {
 	var surveys []models.Survey
 
-	err := s.db.Where("customer_name LIKE ?", "%"+customerName+"%").Find(&surveys).Error
+	err := s.db.Preload("Surveyors").Where("customer_name LIKE ?", "%"+customerName+"%").Find(&surveys).Error
 	if err != nil {
 		return nil, err
 	}
@@ -152,7 +166,7 @@ func (s *SurveyRepoImpl) GetSurveysByCustomerName(customerName string) ([]models
 func (s *SurveyRepoImpl) GetSurveysByQuestorName(questorName string) ([]models.Survey, error) {
 	var surveys []models.Survey
 
-	err := s.db.Where("questor_name LIKE ?", "%"+questorName+"%").Find(&surveys).Error
+	err := s.db.Preload("Surveyors").Where("questor_name LIKE ?", "%"+questorName+"%").Find(&surveys).Error
 	if err != nil {
 		return nil, err
 	}
@@ -163,7 +177,9 @@ func (s *SurveyRepoImpl) GetSurveysByQuestorName(questorName string) ([]models.S
 func (s *SurveyRepoImpl) GetSurveysBySurveyorName(surveyorName string) ([]models.Survey, error) {
 	var surveys []models.Survey
 
-	err := s.db.Where("surveyor_name LIKE ?", "%"+surveyorName+"%").Find(&surveys).Error
+	err := s.db.Preload("Surveyors").Joins("JOIN surveyor_links ON surveyor_links.survey_id = surveys.id").
+		Joins("JOIN users ON users.id = surveyor_links.surveyor_id").
+		Where("users.name LIKE ?", "%"+surveyorName+"%").Find(&surveys).Error
 	if err != nil {
 		return nil, err
 	}
@@ -174,7 +190,7 @@ func (s *SurveyRepoImpl) GetSurveysBySurveyorName(surveyorName string) ([]models
 func (s *SurveyRepoImpl) GetSurveysByTitle(title string) ([]models.Survey, error) {
 	var surveys []models.Survey
 
-	err := s.db.Where("title LIKE ?", "%"+title+"%").Find(&surveys).Error
+	err := s.db.Preload("Surveyors").Where("title LIKE ?", "%"+title+"%").Find(&surveys).Error
 	if err != nil {
 		return nil, err
 	}

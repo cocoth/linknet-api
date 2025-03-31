@@ -22,7 +22,6 @@ type User struct {
 	Role       *Role        `gorm:"foreignKey:RoleID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"role"`
 	FileUpload []FileUpload `gorm:"foreignKey:AuthorID" json:"file_upload"`
 	Notifies   []Notify     `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"notifies"`
-	Surveys    []Survey     `gorm:"foreignKey:SurveyorID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"surveys"`
 	CreatedAt  time.Time
 	UpdatedAt  time.Time
 	DeletedAt  *time.Time `gorm:"index"`

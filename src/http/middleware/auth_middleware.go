@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"os"
 	"time"
 
 	ctrlUtils "github.com/cocoth/linknet-api/src/controllers/helper"
@@ -61,5 +62,8 @@ func (u *UserAuthorization) Authorize(c *gin.Context) {
 
 	// c.Set("X-CSRF-Token", csrfToken)
 	c.Set("user", user)
+	domain := os.Getenv("APP_DOMAIN")
+	c.SetCookie("session_token", sessionToken, int((24 * time.Hour).Seconds()), "/", domain, false, true)
+
 	c.Next()
 }
