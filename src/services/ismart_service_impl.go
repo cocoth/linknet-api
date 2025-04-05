@@ -144,28 +144,35 @@ func (i *iSmartServiceImpl) GetISmartsWithFilters(filters map[string]interface{}
 // UpdateISmart implements ISmartService.
 func (i *iSmartServiceImpl) UpdateISmart(id string, iSmart request.ISmartRequest) (response.ISmartResponse, error) {
 	// Get existing ISmart by ID
-	existingISmart, err := i.ismartRepository.GetISmartByID(id)
+	_, err := i.ismartRepository.GetISmartByID(id)
 	if err != nil {
 		return response.ISmartResponse{}, err
 	}
 
-	if existingISmart.FiberNode == "" {
-		existingISmart.FiberNode = utils.SanitizeString(iSmart.FiberNode)
+	var iSmartModel models.ISmart
+
+	if iSmart.FiberNode != "" {
+		sanitize := utils.SanitizeString(iSmart.FiberNode)
+		iSmartModel.FiberNode = sanitize
 	}
-	if existingISmart.Address == "" {
-		existingISmart.Address = utils.SanitizeString(iSmart.Address)
+	if iSmart.Address != "" {
+		sanitize := utils.SanitizeString(iSmart.Address)
+		iSmartModel.Address = sanitize
 	}
-	if existingISmart.CustomerName == "" {
-		existingISmart.CustomerName = utils.SanitizeString(iSmart.CustomerName)
+	if iSmart.CustomerName != "" {
+		sanitize := utils.SanitizeString(iSmart.CustomerName)
+		iSmartModel.CustomerName = sanitize
 	}
-	if existingISmart.Coordinate == "" {
-		existingISmart.Coordinate = utils.SanitizeString(iSmart.Coordinate)
+	if iSmart.Coordinate != "" {
+		sanitize := utils.SanitizeString(iSmart.Coordinate)
+		iSmartModel.Coordinate = sanitize
 	}
-	if existingISmart.Street == "" {
-		existingISmart.Street = utils.SanitizeString(iSmart.Street)
+	if iSmart.Street != "" {
+		sanitize := utils.SanitizeString(iSmart.Street)
+		iSmartModel.Street = sanitize
 	}
 
-	updatedISmart, err := i.ismartRepository.UpdateISmart(existingISmart)
+	updatedISmart, err := i.ismartRepository.UpdateISmart(iSmartModel)
 	return sendISmartResponse(updatedISmart, err)
 }
 

@@ -121,11 +121,7 @@ func (i *iSmartRepoImpl) GetISmartsWithFilters(filters map[string]interface{}) (
 
 // UpdateISmart implements ISmartRepo.
 func (i *iSmartRepoImpl) UpdateISmart(iSmart models.ISmart) (models.ISmart, error) {
-	var existingISmart models.ISmart
-	if err := i.db.Where("id = ?", iSmart.ID).First(&existingISmart).Error; err != nil {
-		return models.ISmart{}, err
-	}
-	if err := i.db.Model(&existingISmart).Updates(iSmart).Error; err != nil {
+	if err := i.db.Model(&iSmart).Where("id = ?", iSmart.ID).Updates(iSmart).Error; err != nil {
 		return models.ISmart{}, err
 	}
 	return iSmart, nil
