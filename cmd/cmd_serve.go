@@ -213,6 +213,7 @@ func InitializeAndRunServer() {
 	surveyReportRepo := repo.NewSurveyReportRepoImpl(db)
 	filePermRepo := repo.NewFilePermRepoImpl(db)
 	notifRepo := repo.NewNotifyRepoImpl(db)
+	iSmartRepo := repo.NewISmartRepoImpl(db)
 
 	userService := services.NewUserServiceImpl(userRepo, validate)
 	authService := services.NewAuthService(userRepo)
@@ -221,6 +222,7 @@ func InitializeAndRunServer() {
 	surveyService := services.NewSurveyServiceImpl(surveyRepo)
 	surveyReportService := services.NewSurveyReportServiceImpl(surveyReportRepo)
 	notifService := services.NewNotifyServiceImpl(notifRepo)
+	iSmartService := services.NewISmartServiceImpl(iSmartRepo)
 
 	authMiddleware := middlewares.NewUserAuthorization(userService)
 
@@ -230,6 +232,7 @@ func InitializeAndRunServer() {
 	surveyCtrl := controllers.NewSurveyController(surveyService, userService)
 	reportCtrl := controllers.NewSurveyReportController(surveyReportService, userService)
 	notifCtrl := controllers.NewNotifyController(notifService)
+	ismartCtrl := controllers.NewISmartController(iSmartService)
 
 	routes.AuthRoute(authMiddleware, authCtrl, v1)
 	routes.UserRoute(authMiddleware, userCtrl, v1)
@@ -237,6 +240,7 @@ func InitializeAndRunServer() {
 	routes.SurveyRoute(authMiddleware, surveyCtrl, v1)
 	routes.SurveyReportRoute(authMiddleware, reportCtrl, v1)
 	routes.NotificationRoute(notifCtrl, v1)
+	routes.ISmartRoute(authMiddleware, ismartCtrl, v1)
 
 	StartServer(r, appHost, appPort)
 }

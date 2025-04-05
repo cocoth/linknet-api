@@ -18,6 +18,7 @@ func DropTables() {
 		&models.Survey{},
 		&models.SurveyorLink{},
 		&models.SurveyReport{},
+		&models.ISmart{},
 	)
 	if err != nil {
 		utils.Error("Failed to drop tables", "DropTables")

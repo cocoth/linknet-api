@@ -131,3 +131,18 @@ type NotifyService interface {
 	UpdateNotify(notify request.NotifyRequest) (response.NotifyResponse, error)
 	DeleteNotify(id string) (response.NotifyResponse, error)
 }
+
+type ISmartService interface {
+	GetAllISmart() ([]response.ISmartResponse, error)
+	GetISmartByID(id string) (response.ISmartResponse, error)
+	GetISmartByAddress(address string) (response.ISmartResponse, error)
+	GetISmartByCoordinate(coordinate string) (response.ISmartResponse, error)
+	GetISmartByCustomerName(customerName string) (response.ISmartResponse, error)
+	GetISmartByFiberNode(fiberNode string) (response.ISmartResponse, error)
+	GetISmartByStreet(street string) (response.ISmartResponse, error)
+	GetISmartsWithFilters(filters map[string]interface{}) ([]response.ISmartResponse, error)
+
+	CreateISmart(iSmart request.ISmartRequest) (response.ISmartResponse, error)
+	UpdateISmart(id string, iSmart request.ISmartRequest) (response.ISmartResponse, error)
+	DeleteISmart(id string) (response.ISmartResponse, error)
+}

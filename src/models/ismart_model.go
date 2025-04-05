@@ -19,7 +19,7 @@ type ISmart struct {
 	DeletedAt    *time.Time `gorm:"index"`
 }
 
-func (s *ISmart) BeforeCreate(tx *gorm.DB) error {
-	s.ID = uuid.New().String()
+func (i *ISmart) BeforeCreate(tx *gorm.DB) error {
+	i.ID = uuid.New().String()
 	return nil
 }

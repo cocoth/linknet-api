@@ -136,3 +136,20 @@ type NotifyRepo interface {
 	UpdateNotify(notify models.Notify) (models.Notify, error)
 	DeleteNotify(id string) (models.Notify, error)
 }
+
+type ISmartRepo interface {
+	GetAllISmart() ([]models.ISmart, error)
+
+	GetISmartByID(id string) (models.ISmart, error)
+	GetISmartByFiberNode(fiberNode string) (models.ISmart, error)
+	GetISmartByAddress(address string) (models.ISmart, error)
+	GetISmartByCustomerName(customerName string) (models.ISmart, error)
+	GetISmartByCoordinate(coordinate string) (models.ISmart, error)
+	GetISmartByStreet(street string) (models.ISmart, error)
+
+	GetISmartsWithFilters(filters map[string]interface{}) ([]models.ISmart, error)
+
+	CreateISmart(iSmart models.ISmart) (models.ISmart, error)
+	UpdateISmart(iSmart models.ISmart) (models.ISmart, error)
+	DeleteISmart(id string) (models.ISmart, error)
+}

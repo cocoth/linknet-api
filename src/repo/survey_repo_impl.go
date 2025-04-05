@@ -154,8 +154,10 @@ func (s *SurveyRepoImpl) GetSurveyBySurveyDate(surveyDate time.Time) (models.Sur
 // GetSurveyBySurveyorID implements SurveyRepo.
 func (s *SurveyRepoImpl) GetSurveyBySurveyorID(surveyorID string) (models.Survey, error) {
 	var survey models.Survey
-	if err := s.db.Preload("Surveyors").Joins("JOIN surveyor_links ON surveyor_links.survey_id = surveys.id").
-		Where("surveyor_links.surveyor_id = ?", surveyorID).First(&survey).Error; err != nil {
+	subQuery := s.db.Table("surveyor_links").Select("survey_id").Where("surveyor_id = ?", surveyorID)
+	query := s.db.Preload("Surveyors").Where("surveys.id IN (?)", subQuery).Error
+
+	if err := query; err != nil {
 		return models.Survey{}, err
 	}
 	return survey, nil
