@@ -37,27 +37,13 @@ func (f *FileController) UploadFile(c *gin.Context) {
 		helper.RespondWithError(c, 400, err.Error())
 		return
 	}
-	token, err := c.Cookie("session_token")
-	if err != nil {
+	token, exsist := c.Get("current_user")
+	if !exsist {
 		helper.RespondWithError(c, http.StatusUnauthorized, "No token provided")
 		return
 	}
 
-	exp, userId, err := utils.ValidateJWTToken(token)
-	if err != nil {
-		helper.RespondWithError(c, http.StatusUnauthorized, "Invalid token")
-		return
-	}
-
-	userRes, err := f.userService.GetUserById(userId)
-	if err != nil {
-		helper.RespondWithError(c, http.StatusUnauthorized, "Unauthorized")
-		return
-	}
-	if float64(time.Now().Unix()) > exp {
-		helper.RespondWithError(c, http.StatusUnauthorized, "Token Expired")
-		return
-	}
+	currentResUser := token.(response.UserResponse)
 
 	fileBytes, _ := file.Open()
 	defer fileBytes.Close()
@@ -106,7 +92,7 @@ func (f *FileController) UploadFile(c *gin.Context) {
 	fileUploadRequest.FileType = http.DetectContentType(buffer)
 	fileUploadRequest.FileUri = filePath
 	fileUploadRequest.FileHash = fileHash
-	fileUploadRequest.AuthorID = userRes.ID
+	fileUploadRequest.AuthorID = currentResUser.ID
 
 	// Upload metadata to database
 	fileRes, err := f.fileService.UploadFile(fileUploadRequest)
