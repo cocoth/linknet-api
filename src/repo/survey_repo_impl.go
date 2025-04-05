@@ -44,7 +44,8 @@ func (s *SurveyRepoImpl) GetSurveysWithFilters(filters map[string]interface{}) (
 		query = query.Where("survey_date = ?", survey_date.(string))
 	}
 	if surveyor_id, ok := filters["surveyor_id"]; ok {
-		query = query.Where("surveyor_id = ?", surveyor_id.(string))
+		query = query.Where("surveyor_id = ?", surveyor_id.(string)).Joins("JOIN surveyor_links ON surveyor_links.survey_id = surveys.id").
+			Where("surveyor_links.surveyor_id = ?", surveyor_id).First(&surveys)
 	}
 	if image_id, ok := filters["image_id"]; ok {
 		query = query.Where("image_id = ?", image_id.(string))

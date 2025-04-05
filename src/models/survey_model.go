@@ -64,21 +64,6 @@ func (s *SurveyReport) BeforeCreate(tx *gorm.DB) error {
 	return nil
 }
 
-type ISmart struct {
-	ID           string `gorm:"type:varchar(36);primaryKey" json:"id"`
-	FiberNode    string `json:"fiber_node"`
-	Address      string `json:"address"`
-	CustomerName string `json:"customer_name"`
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
-	DeletedAt    *time.Time `gorm:"index"`
-}
-
-func (s *ISmart) BeforeCreate(tx *gorm.DB) error {
-	s.ID = uuid.New().String()
-	return nil
-}
-
 type Notify struct {
 	ID            string      `gorm:"type:varchar(36);primaryKey" json:"id"`
 	UserID        string      `json:"user_id"`
