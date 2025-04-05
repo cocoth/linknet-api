@@ -132,6 +132,8 @@ type NotifyRepo interface {
 	GetNotifyByNotifyMessage(notifyMessage string) ([]models.Notify, error)
 	GetNotifyByIsRead(isRead bool) ([]models.Notify, error)
 
+	GetNotifyWithFilters(filters map[string]interface{}) ([]models.Notify, error)
+
 	CreateNotify(notify models.Notify) (models.Notify, error)
 	UpdateNotify(notify models.Notify) (models.Notify, error)
 	DeleteNotify(id string) (models.Notify, error)

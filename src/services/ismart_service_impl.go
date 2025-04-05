@@ -150,24 +150,19 @@ func (i *iSmartServiceImpl) UpdateISmart(id string, iSmart request.ISmartRequest
 	}
 
 	if existingISmart.FiberNode == "" {
-		sanitize := utils.SanitizeString(iSmart.FiberNode)
-		existingISmart.FiberNode = sanitize
+		existingISmart.FiberNode = utils.SanitizeString(iSmart.FiberNode)
 	}
 	if existingISmart.Address == "" {
-		sanitize := utils.SanitizeString(iSmart.Address)
-		existingISmart.Address = sanitize
+		existingISmart.Address = utils.SanitizeString(iSmart.Address)
 	}
 	if existingISmart.CustomerName == "" {
-		sanitize := utils.SanitizeString(iSmart.CustomerName)
-		existingISmart.CustomerName = sanitize
+		existingISmart.CustomerName = utils.SanitizeString(iSmart.CustomerName)
 	}
 	if existingISmart.Coordinate == "" {
-		sanitize := utils.SanitizeString(iSmart.Coordinate)
-		existingISmart.Coordinate = sanitize
+		existingISmart.Coordinate = utils.SanitizeString(iSmart.Coordinate)
 	}
 	if existingISmart.Street == "" {
-		sanitize := utils.SanitizeString(iSmart.Street)
-		existingISmart.Street = sanitize
+		existingISmart.Street = utils.SanitizeString(iSmart.Street)
 	}
 
 	updatedISmart, err := i.ismartRepository.UpdateISmart(existingISmart)

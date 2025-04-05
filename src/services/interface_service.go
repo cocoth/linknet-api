@@ -127,6 +127,8 @@ type NotifyService interface {
 	GetNotifyByNotifyMessage(notifyMessage string) ([]response.NotifyResponse, error)
 	GetNotifyByIsRead(isRead bool) ([]response.NotifyResponse, error)
 
+	GetNotifyWithFilters(filters map[string]interface{}) ([]response.NotifyResponse, error)
+
 	CreateNotify(notify request.NotifyRequest) (response.NotifyResponse, error)
 	UpdateNotify(notify request.NotifyRequest) (response.NotifyResponse, error)
 	DeleteNotify(id string) (response.NotifyResponse, error)

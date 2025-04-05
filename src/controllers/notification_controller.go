@@ -6,7 +6,6 @@ import (
 
 	"github.com/cocoth/linknet-api/src/controllers/helper"
 	"github.com/cocoth/linknet-api/src/http/request"
-	"github.com/cocoth/linknet-api/src/http/response"
 	"github.com/cocoth/linknet-api/src/services"
 	"github.com/gin-gonic/gin"
 )
@@ -20,9 +19,8 @@ func NewNotifyController(notifyService services.NotifyService) *NotifyController
 }
 
 func (n *NotifyController) GetAllNotify(c *gin.Context) {
-	var notifies []response.NotifyResponse
-	var err error
 
+	qID := c.Query("id")
 	qUserID := c.Query("user_id")
 	qFileID := c.Query("file_id")
 	qNotifyMessage := c.Query("notify_message")
@@ -30,59 +28,47 @@ func (n *NotifyController) GetAllNotify(c *gin.Context) {
 	qNotifyType := c.Query("notify_type")
 	qIsRead := c.Query("is_read")
 
+	filters := map[string]interface{}{}
+
+	if qID != "" {
+		filters["id"] = qID
+	}
 	if qUserID != "" {
-		notifies, err = n.notifyService.GetNotifyByUserID(qUserID)
-		if err != nil {
-			helper.RespondWithError(c, http.StatusBadRequest, err.Error())
-			return
-		}
-	} else if qFileID != "" {
-		notifies, err = n.notifyService.GetNotifyByFileID(qFileID)
-		if err != nil {
-			helper.RespondWithError(c, http.StatusBadRequest, err.Error())
-			return
-		}
-	} else if qNotifyMessage != "" {
-		notifies, err = n.notifyService.GetNotifyByNotifyMessage(qNotifyMessage)
-		if err != nil {
-			helper.RespondWithError(c, http.StatusBadRequest, err.Error())
-			return
-		}
-	} else if qNotifyStatus != "" {
-		notifies, err = n.notifyService.GetNotifyByNotifyStatus(qNotifyStatus)
-		if err != nil {
-			helper.RespondWithError(c, http.StatusBadRequest, err.Error())
-			return
-		}
-	} else if qNotifyType != "" {
-		notifies, err = n.notifyService.GetNotifyByNotifyType(qNotifyType)
-		if err != nil {
-			helper.RespondWithError(c, http.StatusBadRequest, err.Error())
-			return
-		}
-	} else if qIsRead != "" {
+		filters["user_id"] = qUserID
+	}
+	if qFileID != "" {
+		filters["file_id"] = qFileID
+	}
+	if qNotifyMessage != "" {
+		filters["notify_message"] = qNotifyMessage
+	}
+	if qNotifyStatus != "" {
+		filters["notify_status"] = qNotifyStatus
+	}
+	if qNotifyType != "" {
+		filters["notify_type"] = qNotifyType
+	}
+	if qIsRead != "" {
 		isRead, err := strconv.ParseBool(qIsRead)
 		if err != nil {
 			helper.RespondWithError(c, http.StatusBadRequest, "Invalid value for is_read, must be true or false")
 			return
 		}
-		notifies, err = n.notifyService.GetNotifyByIsRead(isRead)
-		if err != nil {
-			helper.RespondWithError(c, http.StatusBadRequest, err.Error())
-			return
-		}
-	} else {
-		notifies, err = n.notifyService.GetAllNotify()
-		if err != nil {
-			helper.RespondWithError(c, http.StatusBadRequest, err.Error())
-			return
-		}
+		filters["is_read"] = isRead
 	}
+
+	notifies, err := n.notifyService.GetNotifyWithFilters(filters)
 
 	if err != nil {
 		helper.RespondWithError(c, http.StatusBadRequest, err.Error())
 		return
 	}
+
+	if len(notifies) == 0 {
+		helper.RespondWithError(c, http.StatusNotFound, "No Notify found with that given filters")
+		return
+	}
+
 	helper.RespondWithSuccess(c, http.StatusOK, notifies)
 }
 
@@ -118,10 +104,14 @@ func (n *NotifyController) UpdateNotify(c *gin.Context) {
 
 func (n *NotifyController) DeleteNotify(c *gin.Context) {
 	notifyID := c.Param("id")
-	_, err := n.notifyService.DeleteNotify(notifyID)
+	if notifyID == "" {
+		helper.RespondWithError(c, http.StatusBadRequest, "Notify ID is required")
+		return
+	}
+	notif, err := n.notifyService.DeleteNotify(notifyID)
 	if err != nil {
 		helper.RespondWithError(c, http.StatusBadRequest, err.Error())
 		return
 	}
-	helper.RespondWithSuccess(c, http.StatusNoContent, nil)
+	helper.RespondWithSuccess(c, http.StatusOK, notif)
 }

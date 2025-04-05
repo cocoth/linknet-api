@@ -9,6 +9,39 @@ type notifyRepoImpl struct {
 	db *gorm.DB
 }
 
+// GetNotifyWithFilters implements NotifyRepo.
+func (n *notifyRepoImpl) GetNotifyWithFilters(filters map[string]interface{}) ([]models.Notify, error) {
+	var notify []models.Notify
+	query := n.db.Model(&models.Notify{})
+
+	if id, ok := filters["id"]; ok {
+		query = query.Where("id = ?", id.(string))
+	}
+	if user_id, ok := filters["user_id"]; ok {
+		query = query.Where("user_id = ?", user_id.(string))
+	}
+	if file_id, ok := filters["file_id"]; ok {
+		query = query.Where("file_id = ?", file_id.(string))
+	}
+	if notify_type, ok := filters["notify_type"]; ok {
+		query = query.Where("notify_type = ?", notify_type.(string))
+	}
+	if notify_status, ok := filters["notify_status"]; ok {
+		query = query.Where("notify_status = ?", notify_status.(string))
+	}
+	if notify_message, ok := filters["notify_message"]; ok {
+		query = query.Where("notify_message LIKE ?", "%"+notify_message.(string)+"%")
+	}
+	if is_read, ok := filters["is_read"]; ok {
+		query = query.Where("is_read = ?", is_read.(bool))
+	}
+
+	if err := query.Find(&notify).Error; err != nil {
+		return nil, err
+	}
+	return notify, nil
+}
+
 // GetAllNotify implements NotifyRepo.
 func (n *notifyRepoImpl) GetAllNotify() ([]models.Notify, error) {
 	var notifies []models.Notify
@@ -105,11 +138,7 @@ func (n *notifyRepoImpl) UpdateNotify(notify models.Notify) (models.Notify, erro
 func (n *notifyRepoImpl) DeleteNotify(id string) (models.Notify, error) {
 	var notify models.Notify
 
-	if err := n.db.First(&notify, "id = ?", id).Error; err != nil {
-		return models.Notify{}, err
-	}
-
-	if err := n.db.Delete(&notify).Error; err != nil {
+	if err := n.db.Where("id = ?", id).Delete(&notify).Error; err != nil {
 		return models.Notify{}, err
 	}
 	return notify, nil

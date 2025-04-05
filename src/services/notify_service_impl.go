@@ -15,10 +15,15 @@ func sendNotifyResponse(notifyModel models.Notify, err error) (response.NotifyRe
 	if err != nil {
 		return response.NotifyResponse{}, err
 	}
+
+	var fileID string
+	if notifyModel.FileID != nil {
+		fileID = *notifyModel.FileID
+	}
 	return response.NotifyResponse{
 		ID:            notifyModel.ID,
 		UserID:        notifyModel.UserID,
-		FileID:        *notifyModel.FileID,
+		FileID:        fileID,
 		NotifyType:    notifyModel.NotifyType,
 		NotifyStatus:  notifyModel.NotifyStatus,
 		NotifyMessage: notifyModel.NotifyMessage,
@@ -34,7 +39,7 @@ func sendNotifiesResponse(notifyModel []models.Notify, err error) ([]response.No
 		return nil, err
 	}
 
-	var notifyResponses []response.NotifyResponse
+	notifyResponses := make([]response.NotifyResponse, 0, len(notifyModel))
 	for _, notify := range notifyModel {
 		notifyResponses = append(notifyResponses, response.NotifyResponse{
 			ID:            notify.ID,
@@ -51,6 +56,12 @@ func sendNotifiesResponse(notifyModel []models.Notify, err error) ([]response.No
 	}
 
 	return notifyResponses, nil
+}
+
+// GetNotifyWithFilters implements NotifyService.
+func (n *NotifyServiceImpl) GetNotifyWithFilters(filters map[string]interface{}) ([]response.NotifyResponse, error) {
+	notify, err := n.notifyRepo.GetNotifyWithFilters(filters)
+	return sendNotifiesResponse(notify, err)
 }
 
 // CreateNotify implements NotifyService.
@@ -71,7 +82,7 @@ func (n *NotifyServiceImpl) CreateNotify(notify request.NotifyRequest) (response
 
 // DeleteNotify implements NotifyService.
 func (n *NotifyServiceImpl) DeleteNotify(id string) (response.NotifyResponse, error) {
-	notify, err := n.notifyRepo.GetNotifyByID(id)
+	notify, err := n.notifyRepo.DeleteNotify(id)
 	return sendNotifyResponse(notify, err)
 }
 
