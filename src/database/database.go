@@ -59,6 +59,7 @@ func ConnectToDB() {
 		&models.Notify{},
 		&models.Survey{},
 		&models.SurveyorLink{},
+		&models.SurveyReport{},
 	); err != nil {
 		utils.Error("Failed to auto-migrate: "+err.Error(), "ConnectToDB")
 		os.Exit(1)

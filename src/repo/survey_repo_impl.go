@@ -11,6 +11,55 @@ type SurveyRepoImpl struct {
 	db *gorm.DB
 }
 
+// GetUsersWithFilters implements SurveyRepo.
+func (s *SurveyRepoImpl) GetSurveysWithFilters(filters map[string]interface{}) ([]models.Survey, error) {
+	var surveys []models.Survey
+	query := s.db.Preload("Surveyors")
+
+	if id, ok := filters["id"]; ok {
+		query = query.Where("id = ?", id)
+	}
+	if title, ok := filters["title"]; ok {
+		query = query.Where("title LIKE ?", "%"+title.(string)+"%")
+	}
+	if form_number, ok := filters["form_number"]; ok {
+		query = query.Where("call_sign = ?", form_number)
+	}
+	if questor_name, ok := filters["questor_name"]; ok {
+		query = query.Where("questor_name = ?", questor_name)
+	}
+	if fat, ok := filters["fat"]; ok {
+		query = query.Where("fat LIKE ?", "%"+fat.(string)+"%")
+	}
+	if customer_name, ok := filters["customer_name"]; ok {
+		query = query.Where("customer_name LIKE ?", "%"+customer_name.(string)+"%")
+	}
+	if address, ok := filters["address"]; ok {
+		query = query.Where("address LIKE ?", "%"+address.(string)+"%")
+	}
+	if node_fdt, ok := filters["node_fdt"]; ok {
+		query = query.Where("node_fdt = ?", node_fdt)
+	}
+	if survey_date, ok := filters["survey_date"]; ok {
+		query = query.Where("survey_date = ?", survey_date.(string))
+	}
+	if surveyor_id, ok := filters["surveyor_id"]; ok {
+		query = query.Where("surveyor_id = ?", surveyor_id.(string))
+	}
+	if image_id, ok := filters["image_id"]; ok {
+		query = query.Where("image_id = ?", image_id.(string))
+	}
+
+	// for key, value := range filters {
+	// 	query = query.Where(key+" = ?", value)
+	// }
+
+	if err := query.Find(&surveys).Error; err != nil {
+		return nil, err
+	}
+	return surveys, nil
+}
+
 // GetAllSurveyWithPreload implements SurveyRepo.
 func (s *SurveyRepoImpl) GetAllSurveyWithPreload(preload string) ([]models.Survey, error) {
 	var surveys []models.Survey

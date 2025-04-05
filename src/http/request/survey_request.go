@@ -35,10 +35,10 @@ type UpdateSurveyRequest struct {
 }
 
 type SurveyReportRequest struct {
-	SurveyID string `json:"survey_id"`
-	Remark   string `json:"remark"`
-	Status   string `json:"status"`
-	ImageID  string `json:"image_id"`
+	SurveyID string  `json:"survey_id" validate:"required"`
+	Status   string  `json:"status" validate:"required"`
+	Remark   string  `json:"remark" validate:"required"`
+	ImageID  *string `json:"image_id"`
 }
 
 type UpdateSurveyReportRequest struct {

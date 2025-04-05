@@ -24,6 +24,18 @@ func NewUserController(service services.UserService) *UserController {
 func (u *UserController) CreateUser(c *gin.Context) {
 	var createReq request.UserRequest
 
+	token, exsist := c.Get("current_user")
+	if !exsist {
+		helper.RespondWithError(c, http.StatusUnauthorized, "No token provided")
+		return
+	}
+	currentResUser := token.(response.UserResponse)
+
+	if currentResUser.Role.Name != "admin" {
+		helper.RespondWithError(c, http.StatusUnauthorized, "only admin can create user!")
+		return
+	}
+
 	if err := c.ShouldBindJSON(&createReq); err != nil {
 		helper.RespondWithError(c, http.StatusBadRequest, err.Error())
 		return
@@ -31,21 +43,6 @@ func (u *UserController) CreateUser(c *gin.Context) {
 
 	if len(createReq.Password) < 8 {
 		helper.RespondWithError(c, http.StatusBadRequest, "Password must be at least 8 characters long")
-		return
-	}
-
-	token, err := c.Cookie("session_token")
-	if err != nil {
-		helper.RespondWithError(c, http.StatusUnauthorized, "No token provided")
-		return
-	}
-	isadmin, _, err := u.userService.IsAdmin(token)
-	if err != nil {
-		helper.RespondWithError(c, http.StatusUnauthorized, err.Error())
-		return
-	}
-	if !isadmin {
-		helper.RespondWithError(c, http.StatusUnauthorized, "only admin can create user!")
 		return
 	}
 
@@ -65,6 +62,13 @@ func (u *UserController) CreateUser(c *gin.Context) {
 func (u *UserController) UpdateUser(c *gin.Context) {
 	var updateUserReq request.UpdateUserRequest
 
+	token, exsist := c.Get("current_user")
+	if !exsist {
+		helper.RespondWithError(c, http.StatusUnauthorized, "No token provided")
+		return
+	}
+	currentResUser := token.(response.UserResponse)
+
 	if err := c.ShouldBindJSON(&updateUserReq); err != nil {
 		helper.RespondWithError(c, http.StatusBadRequest, err.Error())
 		return
@@ -72,24 +76,16 @@ func (u *UserController) UpdateUser(c *gin.Context) {
 
 	id := c.Param("id")
 
-	token, err := c.Cookie("session_token")
-	if err != nil {
-		helper.RespondWithError(c, http.StatusUnauthorized, "No token provided")
-		return
-	}
-	isadmin, _, err := u.userService.IsAdmin(token)
-	if err != nil {
-		helper.RespondWithError(c, http.StatusUnauthorized, err.Error())
-		return
-	}
-	if !isadmin {
-		user, err := u.userService.GetUserById(id)
-		if err != nil {
-			helper.RespondWithError(c, http.StatusNotFound, "user not found")
+	if currentResUser.Role.Name != "admin" {
+		// If not admin, ensure the user can only update their own data
+		if currentResUser.ID != id {
+			helper.RespondWithError(c, http.StatusUnauthorized, "You can only update your own data")
 			return
 		}
-		if user.Role.Name != "user" || (updateUserReq.Role != nil && updateUserReq.Role.Name != "user") {
-			helper.RespondWithError(c, http.StatusUnauthorized, "only admin can update user!")
+
+		// Restrict role updates for non-admin users
+		if updateUserReq.Role != nil && updateUserReq.Role.Name != "user" {
+			helper.RespondWithError(c, http.StatusUnauthorized, "Only admin can update roles")
 			return
 		}
 	}
@@ -104,17 +100,14 @@ func (u *UserController) UpdateUser(c *gin.Context) {
 
 func (u *UserController) DeleteUser(c *gin.Context) {
 	id := c.Param("id")
-	token, err := c.Cookie("session_token")
-	if err != nil {
+	token, exsist := c.Get("current_user")
+	if !exsist {
 		helper.RespondWithError(c, http.StatusUnauthorized, "No token provided")
 		return
 	}
-	isadmin, _, err := u.userService.IsAdmin(token)
-	if err != nil {
-		helper.RespondWithError(c, http.StatusUnauthorized, err.Error())
-		return
-	}
-	if !isadmin {
+	currentResUser := token.(response.UserResponse)
+
+	if currentResUser.Role.Name != "admin" {
 		helper.RespondWithError(c, http.StatusUnauthorized, "only admin can delete user!")
 		return
 	}
@@ -132,63 +125,63 @@ func (u *UserController) DeleteUser(c *gin.Context) {
 }
 
 func (u *UserController) GetAll(c *gin.Context) {
-	var users []response.UserResponse
-	var err error
-
-	token, err := c.Cookie("session_token")
-	if err != nil {
+	token, exsist := c.Get("current_user")
+	if !exsist {
 		helper.RespondWithError(c, http.StatusUnauthorized, "No token provided")
 		return
 	}
-	_, curentResUser, errToken := u.userService.CheckToken(token)
-	if errToken != nil {
-		helper.RespondWithError(c, http.StatusUnauthorized, errToken.Error())
-		return
-	}
+	currentResUser := token.(response.UserResponse)
 
 	qID := c.Query("id")
 	qName := c.Query("name")
 	qEmail := c.Query("email")
 	qPhone := c.Query("phone")
 	qRole := c.Query("role")
-	qContractor := c.Query("contractor")
 	qStatus := c.Query("status")
+	qContractor := c.Query("contractor")
+	qCallSign := c.Query("callsign")
 
-	if curentResUser.Role.Name != "admin" {
-		helper.RespondWithSuccess(c, http.StatusOK, curentResUser)
+	filters := map[string]interface{}{}
+
+	if currentResUser.Role.Name != "admin" {
+		helper.RespondWithSuccess(c, http.StatusOK, currentResUser)
 		return
-	} else if curentResUser.Role.Name == "admin" {
+	} else if currentResUser.Role.Name == "admin" {
 		if qID != "" {
-			user, errUser := u.userService.GetUserById(qID)
-			if errUser != nil {
-				if errUser.Error() == "record not found" {
-					helper.RespondWithError(c, http.StatusNotFound, "user not found")
-				} else {
-					helper.RespondWithError(c, http.StatusInternalServerError, errUser.Error())
-				}
-				return
-			}
-			helper.RespondWithSuccess(c, http.StatusOK, user)
-			return
-		} else if qName != "" {
-			users, err = u.userService.GetUsersByName(qName)
-		} else if qEmail != "" {
-			users, err = u.userService.GetUsersByEmail(qEmail)
-		} else if qPhone != "" {
-			users, err = u.userService.GetUsersByPhone(qPhone)
-		} else if qRole != "" {
-			users, err = u.userService.GetUsersByRole(qRole)
-		} else if qContractor != "" {
-			users, err = u.userService.GetUsersByContractor(qContractor)
-		} else if qStatus != "" {
-			users, err = u.userService.GetUsersByStatus(qStatus)
-		} else {
-			users, err = u.userService.GetAll()
+			filters["id"] = qID
+		}
+		if qName != "" {
+			filters["name"] = qName
+		}
+		if qEmail != "" {
+			filters["email"] = qEmail
+		}
+		if qPhone != "" {
+			filters["phone"] = qPhone
+		}
+		if qRole != "" {
+			filters["role"] = qRole
+		}
+		if qStatus != "" {
+			filters["status"] = qStatus
+		}
+		if qContractor != "" {
+			filters["contractor"] = qContractor
+		}
+		if qCallSign != "" {
+			filters["callsign"] = qCallSign
 		}
 	}
 
+	users, err := u.userService.GetUsersWithFilters(filters)
+
 	if err != nil {
 		helper.RespondWithError(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if len(users) == 0 {
+		helper.RespondWithError(c, http.StatusNotFound, "No users found with that given filters")
 		return
 	}
 
@@ -198,23 +191,20 @@ func (u *UserController) GetAll(c *gin.Context) {
 func (u *UserController) CreateRole(c *gin.Context) {
 	var createReq request.RoleRequest
 
-	if err := c.ShouldBindJSON(&createReq); err != nil {
-		helper.RespondWithError(c, http.StatusBadRequest, err.Error())
-		return
-	}
-
-	token, err := c.Cookie("session_token")
-	if err != nil {
+	token, exsist := c.Get("current_user")
+	if !exsist {
 		helper.RespondWithError(c, http.StatusUnauthorized, "No token provided")
 		return
 	}
-	isadmin, _, err := u.userService.IsAdmin(token)
-	if err != nil {
-		helper.RespondWithError(c, http.StatusUnauthorized, err.Error())
+	currentResUser := token.(response.UserResponse)
+
+	if currentResUser.Role.Name != "admin" {
+		helper.RespondWithError(c, http.StatusUnauthorized, "only admin can create role!")
 		return
 	}
-	if !isadmin {
-		helper.RespondWithError(c, http.StatusUnauthorized, "only admin can create role!")
+
+	if err := c.ShouldBindJSON(&createReq); err != nil {
+		helper.RespondWithError(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -231,18 +221,15 @@ func (u *UserController) GetAllRole(c *gin.Context) {
 	var roles []response.RoleResponse
 	var err error
 
-	token, err := c.Cookie("session_token")
-	if err != nil {
+	token, exsist := c.Get("current_user")
+	if !exsist {
 		helper.RespondWithError(c, http.StatusUnauthorized, "No token provided")
 		return
 	}
-	isadmin, _, err := u.userService.IsAdmin(token)
-	if err != nil {
-		helper.RespondWithError(c, http.StatusUnauthorized, err.Error())
-		return
-	}
-	if !isadmin {
-		helper.RespondWithError(c, http.StatusUnauthorized, "only admin can create role!")
+	currentResUser := token.(response.UserResponse)
+
+	if currentResUser.Role.Name != "admin" {
+		helper.RespondWithError(c, http.StatusUnauthorized, "only admin can get role!")
 		return
 	}
 
@@ -287,27 +274,24 @@ func (u *UserController) GetAllRole(c *gin.Context) {
 func (u *UserController) UpdateRole(c *gin.Context) {
 	var updateReq request.RoleRequest
 
+	token, exsist := c.Get("current_user")
+	if !exsist {
+		helper.RespondWithError(c, http.StatusUnauthorized, "No token provided")
+		return
+	}
+	currentResUser := token.(response.UserResponse)
+
+	if currentResUser.Role.Name != "admin" {
+		helper.RespondWithError(c, http.StatusUnauthorized, "only admin can update role!")
+		return
+	}
+
 	if err := c.ShouldBindJSON(&updateReq); err != nil {
 		helper.RespondWithError(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	id := c.Param("id")
-
-	token, err := c.Cookie("session_token")
-	if err != nil {
-		helper.RespondWithError(c, http.StatusUnauthorized, "No token provided")
-		return
-	}
-	isadmin, _, err := u.userService.IsAdmin(token)
-	if err != nil {
-		helper.RespondWithError(c, http.StatusUnauthorized, err.Error())
-		return
-	}
-	if !isadmin {
-		helper.RespondWithError(c, http.StatusUnauthorized, "only admin can update role!")
-		return
-	}
 
 	roleID, err := strconv.ParseUint(id, 10, 32)
 	if err != nil {
@@ -323,21 +307,19 @@ func (u *UserController) UpdateRole(c *gin.Context) {
 }
 
 func (u *UserController) DeleteRole(c *gin.Context) {
-	id := c.Param("id")
-	token, err := c.Cookie("session_token")
-	if err != nil {
+	token, exsist := c.Get("current_user")
+	if !exsist {
 		helper.RespondWithError(c, http.StatusUnauthorized, "No token provided")
 		return
 	}
-	isadmin, _, err := u.userService.IsAdmin(token)
-	if err != nil {
-		helper.RespondWithError(c, http.StatusUnauthorized, err.Error())
-		return
-	}
-	if !isadmin {
+	currentResUser := token.(response.UserResponse)
+
+	if currentResUser.Role.Name != "admin" {
 		helper.RespondWithError(c, http.StatusUnauthorized, "only admin can delete role!")
 		return
 	}
+	id := c.Param("id")
+
 	roleID, err := strconv.ParseUint(id, 10, 32)
 	if err != nil {
 		helper.RespondWithError(c, http.StatusBadRequest, "Invalid role ID")

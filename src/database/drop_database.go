@@ -8,7 +8,17 @@ import (
 )
 
 func DropTables() {
-	err := DB.Migrator().DropTable(&models.User{}, &models.Role{})
+	err := DB.Migrator().DropTable(
+		&models.Role{},
+		&models.User{},
+		&models.FileUpload{},
+		&models.FileAccessRequest{},
+		&models.FileAccess{},
+		&models.Notify{},
+		&models.Survey{},
+		&models.SurveyorLink{},
+		&models.SurveyReport{},
+	)
 	if err != nil {
 		utils.Error("Failed to drop tables", "DropTables")
 		os.Exit(1)

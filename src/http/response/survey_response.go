@@ -31,9 +31,9 @@ type SurveyResponse struct {
 type SurveyReportResponse struct {
 	ID        string     `json:"id"`
 	SurveyID  string     `json:"survey_id"`
-	Remark    string     `json:"remark"`
 	Status    string     `json:"status"`
-	ImageID   string     `json:"image_id"`
+	Remark    string     `json:"remark"`
+	ImageID   *string    `json:"image_id"`
 	CreatedAt time.Time  `json:"CreatedAt"`
 	UpdatedAt time.Time  `json:"UpdatedAt"`
 	DeletedAt *time.Time `json:"DeletedAt"`

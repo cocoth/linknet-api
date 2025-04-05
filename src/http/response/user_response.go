@@ -33,14 +33,3 @@ type FileUploadResponse struct {
 	UpdatedAt time.Time  `json:"UpdatedAt"`
 	DeletedAt *time.Time `json:"DeletedAt"`
 }
-
-type ImageUploadResponse struct {
-	ID        string     `json:"id"`
-	ImageName string     `json:"file_name"`
-	ImageUri  string     `json:"file_uri"`
-	ImageHash string     `json:"file_hash"`
-	AuthorID  *string    `json:"author_id"`
-	CreatedAt time.Time  `json:"CreatedAt"`
-	UpdatedAt time.Time  `json:"UpdatedAt"`
-	DeletedAt *time.Time `json:"DeletedAt"`
-}

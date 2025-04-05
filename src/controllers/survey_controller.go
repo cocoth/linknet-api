@@ -3,7 +3,6 @@ package controllers
 import (
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/cocoth/linknet-api/src/controllers/helper"
 	"github.com/cocoth/linknet-api/src/http/request"
@@ -25,8 +24,6 @@ func NewSurveyController(surveyService services.SurveyService, userService servi
 }
 
 func (s *SurveyController) GetAllSurvey(c *gin.Context) {
-	var surveys []response.SurveyResponse
-	var err error
 
 	qID := c.Query("id")
 	qTitle := c.Query("title")
@@ -40,97 +37,51 @@ func (s *SurveyController) GetAllSurvey(c *gin.Context) {
 	qSurveyorID := c.Query("surveyor_id")
 	qImageID := c.Query("image_id")
 
+	filters := map[string]interface{}{}
+
 	if qID != "" {
-		survey, err := s.surveyService.GetSurveyByID(qID)
-		if err != nil {
-			helper.RespondWithError(c, http.StatusBadRequest, err.Error())
-			return
-		}
-		helper.RespondWithSuccess(c, http.StatusOK, survey)
-		return
-	} else if qTitle != "" {
-		surveys, err = s.surveyService.GetSurveysByTitle(qTitle)
-		if err != nil {
-			helper.RespondWithError(c, http.StatusBadRequest, err.Error())
-			return
-		}
-	} else if qFormNumber != "" {
-		survey, err := s.surveyService.GetSurveyByFormNumber(qFormNumber)
-		if err != nil {
-			helper.RespondWithError(c, http.StatusBadRequest, err.Error())
-			return
-		}
-		helper.RespondWithSuccess(c, http.StatusOK, survey)
-		return
-	} else if qQuestorName != "" {
-		surveys, err = s.surveyService.GetSurveysByQuestorName(qQuestorName)
-		if err != nil {
-			helper.RespondWithError(c, http.StatusBadRequest, err.Error())
-			return
-		}
-	} else if qFAT != "" {
-		survey, err := s.surveyService.GetSurveyByFAT(qFAT)
-		if err != nil {
-			helper.RespondWithError(c, http.StatusBadRequest, err.Error())
-			return
-		}
-		helper.RespondWithSuccess(c, http.StatusOK, survey)
-		return
-	} else if qCustomerName != "" {
-		surveys, err = s.surveyService.GetSurveysByCustomerName(qCustomerName)
-		if err != nil {
-			helper.RespondWithError(c, http.StatusBadRequest, err.Error())
-			return
-		}
-	} else if qAddress != "" {
-		surveys, err = s.surveyService.GetSurveysByAddress(qAddress)
-		if err != nil {
-			helper.RespondWithError(c, http.StatusBadRequest, err.Error())
-			return
-		}
-	} else if qNodeFDT != "" {
-		survey, err := s.surveyService.GetSurveyByNodeFDT(qNodeFDT)
-		if err != nil {
-			helper.RespondWithError(c, http.StatusBadRequest, err.Error())
-			return
-		}
-		helper.RespondWithSuccess(c, http.StatusOK, survey)
-		return
-	} else if qSurveyDate != "" {
-		parsedDate, parseErr := time.Parse("2006-01-02", qSurveyDate)
-		if parseErr != nil {
-			helper.RespondWithError(c, http.StatusBadRequest, "Invalid date format. Use YYYY-MM-DD.")
-			return
-		}
-		survey, err := s.surveyService.GetSurveyBySurveyDate(parsedDate)
-		if err != nil {
-			helper.RespondWithError(c, http.StatusBadRequest, err.Error())
-			return
-		}
-		helper.RespondWithSuccess(c, http.StatusOK, survey)
-		return
-	} else if qSurveyorID != "" {
-		survey, err := s.surveyService.GetSurveyBySurveyorID(qSurveyorID)
-		if err != nil {
-			helper.RespondWithError(c, http.StatusBadRequest, err.Error())
-			return
-		}
-		helper.RespondWithSuccess(c, http.StatusOK, survey)
-		return
-	} else if qImageID != "" {
-		survey, err := s.surveyService.GetSurveyByImageID(qImageID)
-		if err != nil {
-			helper.RespondWithError(c, http.StatusBadRequest, err.Error())
-			return
-		}
-		helper.RespondWithSuccess(c, http.StatusOK, survey)
-		return
-	} else {
-		surveys, err = s.surveyService.GetAllSurvey()
+		filters["id"] = qID
+	}
+	if qTitle != "" {
+		filters["title"] = qTitle
+	}
+	if qFormNumber != "" {
+		filters["form_number"] = qFormNumber
+	}
+	if qQuestorName != "" {
+		filters["questor_name"] = qQuestorName
+	}
+	if qFAT != "" {
+		filters["fat"] = qFAT
+	}
+	if qCustomerName != "" {
+		filters["customer_name"] = qCustomerName
+	}
+	if qAddress != "" {
+		filters["address"] = qAddress
+	}
+	if qNodeFDT != "" {
+		filters["node_fdt"] = qNodeFDT
+	}
+	if qSurveyDate != "" {
+		filters["survey_date"] = qSurveyDate
+	}
+	if qSurveyorID != "" {
+		filters["surveyor_id"] = qSurveyorID
+	}
+	if qImageID != "" {
+		filters["image_id"] = qImageID
 	}
 
+	surveys, err := s.surveyService.GetSurveysWithFilters(filters)
+
 	if err != nil {
-		helper.RespondWithError(c, http.StatusBadRequest, err.Error())
+		helper.RespondWithError(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if len(surveys) == 0 {
+		helper.RespondWithError(c, http.StatusNotFound, "No Surveys found with that given filters")
 		return
 	}
 
@@ -140,18 +91,14 @@ func (s *SurveyController) GetAllSurvey(c *gin.Context) {
 func (s *SurveyController) CreateSurvey(c *gin.Context) {
 	var surveyReq request.SurveyRequest
 
-	token, err := c.Cookie("session_token")
-	if err != nil {
+	token, exsist := c.Get("current_user")
+	if !exsist {
 		helper.RespondWithError(c, http.StatusUnauthorized, "No token provided")
 		return
 	}
-	isadmin, _, errToken := s.userService.IsAdmin(token)
-	if errToken != nil {
-		helper.RespondWithError(c, http.StatusUnauthorized, errToken.Error())
-		return
-	}
+	currentResUser := token.(response.UserResponse)
 
-	if !isadmin {
+	if currentResUser.Role.Name != "admin" {
 		helper.RespondWithError(c, http.StatusUnauthorized, "only admin can create survey!")
 		return
 	}
@@ -180,17 +127,14 @@ func (s *SurveyController) CreateSurvey(c *gin.Context) {
 func (s *SurveyController) UpdateSurvey(c *gin.Context) {
 	var surveyReq request.UpdateSurveyRequest
 
-	token, err := c.Cookie("session_token")
-	if err != nil {
+	token, exsist := c.Get("current_user")
+	if !exsist {
 		helper.RespondWithError(c, http.StatusUnauthorized, "No token provided")
 		return
 	}
-	isadmin, _, errToken := s.userService.IsAdmin(token)
-	if errToken != nil {
-		helper.RespondWithError(c, http.StatusUnauthorized, errToken.Error())
-		return
-	}
-	if !isadmin {
+	currentResUser := token.(response.UserResponse)
+
+	if currentResUser.Role.Name != "admin" {
 		helper.RespondWithError(c, http.StatusUnauthorized, "only admin can update survey!")
 		return
 	}
@@ -211,22 +155,20 @@ func (s *SurveyController) UpdateSurvey(c *gin.Context) {
 }
 
 func (s *SurveyController) DeleteSurvey(c *gin.Context) {
-	surveyID := c.Param("id")
 
-	token, err := c.Cookie("session_token")
-	if err != nil {
+	token, exsist := c.Get("current_user")
+	if !exsist {
 		helper.RespondWithError(c, http.StatusUnauthorized, "No token provided")
 		return
 	}
-	isadmin, _, errToken := s.userService.IsAdmin(token)
-	if errToken != nil {
-		helper.RespondWithError(c, http.StatusUnauthorized, errToken.Error())
-		return
-	}
-	if !isadmin {
+	currentResUser := token.(response.UserResponse)
+
+	if currentResUser.Role.Name != "admin" {
 		helper.RespondWithError(c, http.StatusUnauthorized, "only admin can delete survey!")
 		return
 	}
+
+	surveyID := c.Param("id")
 
 	surveyRes, err := s.surveyService.DeleteSurvey(surveyID)
 	if err != nil {

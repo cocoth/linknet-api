@@ -2,33 +2,33 @@ package routes
 
 import (
 	"github.com/cocoth/linknet-api/src/controllers"
-	"github.com/cocoth/linknet-api/src/http/middleware"
+	"github.com/cocoth/linknet-api/src/http/middlewares"
 
 	"github.com/gin-gonic/gin"
 )
 
 // func UserRoute(rg *gin.RouterGroup) {
-func UserRoute(ctrl *controllers.UserController, rg *gin.RouterGroup) {
+func UserRoute(authMiddleware *middlewares.UserAuthorization, ctrl *controllers.UserController, rg *gin.RouterGroup) {
 	// Get all users
-	rg.GET("/users", ctrl.GetAll)
+	rg.GET("/users", authMiddleware.Authorize, ctrl.GetAll)
 	// Add new user
-	rg.POST("/user", ctrl.CreateUser)
+	rg.POST("/user", authMiddleware.Authorize, ctrl.CreateUser)
 	// Update Existing user
-	rg.PATCH("/user/:id", ctrl.UpdateUser)
+	rg.PATCH("/user/:id", authMiddleware.Authorize, ctrl.UpdateUser)
 	// Delete user
 	rg.DELETE("/user/:id", ctrl.DeleteUser)
 
 	// Get all roles
-	rg.GET("/user/roles", ctrl.GetAllRole)
+	rg.GET("/user/roles", authMiddleware.Authorize, ctrl.GetAllRole)
 	// Add new role
-	rg.POST("/user/role", ctrl.CreateRole)
+	rg.POST("/user/role", authMiddleware.Authorize, ctrl.CreateRole)
 	// Update Existing role
-	rg.PATCH("/user/role/:id", ctrl.UpdateRole)
+	rg.PATCH("/user/role/:id", authMiddleware.Authorize, ctrl.UpdateRole)
 	// Delete role
-	rg.DELETE("/user/role/:id", ctrl.DeleteRole)
+	rg.DELETE("/user/role/:id", authMiddleware.Authorize, ctrl.DeleteRole)
 }
 
-func AuthRoute(authMiddleware *middleware.UserAuthorization, ctrl *controllers.UserAuthController, rg *gin.RouterGroup) {
+func AuthRoute(authMiddleware *middlewares.UserAuthorization, ctrl *controllers.UserAuthController, rg *gin.RouterGroup) {
 	// Register new user
 	rg.POST("/register", ctrl.Register)
 	// Login
@@ -39,19 +39,19 @@ func AuthRoute(authMiddleware *middleware.UserAuthorization, ctrl *controllers.U
 	rg.GET("/validate", authMiddleware.Authorize, ctrl.Validate)
 }
 
-func FileRoute(ctrl *controllers.FileController, rg *gin.RouterGroup) {
+func FileRoute(authMiddleware *middlewares.UserAuthorization, ctrl *controllers.FileController, rg *gin.RouterGroup) {
 	// Upload file
-	rg.POST("/files/upload", ctrl.UploadFile)
+	rg.POST("/files/upload", authMiddleware.Authorize, ctrl.UploadFile)
 	// Get all files
-	rg.GET("/files", ctrl.GetAllFileUpload)
+	rg.GET("/files", authMiddleware.Authorize, ctrl.GetAllFileUpload)
 	// Download file qurey params (id, fileid, filename, filehash)
-	rg.GET("/files/download", ctrl.DownloadFile)
+	rg.GET("/files/download", authMiddleware.Authorize, ctrl.DownloadFile)
 	// Update file
-	rg.PATCH("/files/:id", ctrl.UpdateFileUpload)
+	rg.PATCH("/files/:id", authMiddleware.Authorize, ctrl.UpdateFileUpload)
 	// // Get file by qurey params (id, fileid, filename, filehash)
-	rg.DELETE("/files", ctrl.DeleteFileUpload)
+	rg.DELETE("/files", authMiddleware.Authorize, ctrl.DeleteFileUpload)
 
-	rg.POST("/files/request", ctrl.RequestAccess)
-	rg.POST("/files/approve", ctrl.ApproveAccess)
-	rg.POST("/files/reject", ctrl.RejectAccess)
+	rg.POST("/files/request", authMiddleware.Authorize, ctrl.RequestAccess)
+	rg.POST("/files/approve", authMiddleware.Authorize, ctrl.ApproveAccess)
+	rg.POST("/files/reject", authMiddleware.Authorize, ctrl.RejectAccess)
 }

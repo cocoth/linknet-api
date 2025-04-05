@@ -28,6 +28,35 @@ func sendFileUploadResponse(data models.FileUpload, err error) (response.FileUpl
 	}, nil
 }
 
+func sendFilesUploadResponse(datas []models.FileUpload, err error) ([]response.FileUploadResponse, error) {
+	if err != nil {
+		return nil, err
+	}
+
+	files := make([]response.FileUploadResponse, 0, len(datas))
+	for _, file := range datas {
+		files = append(files, response.FileUploadResponse{
+			ID:        file.ID,
+			FileName:  file.FileName,
+			FileType:  file.FileType,
+			FileUri:   file.FileUri,
+			FileHash:  file.FileHash,
+			AuthorID:  file.AuthorID,
+			CreatedAt: file.CreatedAt,
+			UpdatedAt: file.UpdatedAt,
+			DeletedAt: file.DeletedAt,
+		})
+	}
+
+	return files, nil
+}
+
+// GetFilesWithFilters implements FileUploadService.
+func (f *fileUploadServiceImpl) GetFilesWithFilters(filters map[string]interface{}) ([]response.FileUploadResponse, error) {
+	files, err := f.fileRepo.GetFilesUploadWithFilters(filters)
+	return sendFilesUploadResponse(files, err)
+}
+
 // UploadFile implements FileUploadService.
 func (f *fileUploadServiceImpl) UploadFile(file request.FileUploadRequest) (response.FileUploadResponse, error) {
 	// Save the file using the repository
@@ -48,26 +77,7 @@ func (f *fileUploadServiceImpl) UploadFile(file request.FileUploadRequest) (resp
 // GetAllFileUpload implements FileUploadService.
 func (f *fileUploadServiceImpl) GetAllFileUpload() ([]response.FileUploadResponse, error) {
 	files, err := f.fileRepo.GetAllFileUpload()
-	if err != nil {
-		return nil, err
-	}
-
-	var fileResponses []response.FileUploadResponse
-	for _, file := range files {
-		fileResponses = append(fileResponses, response.FileUploadResponse{
-			ID:        file.ID,
-			FileName:  file.FileName,
-			FileType:  file.FileType,
-			FileUri:   file.FileUri,
-			FileHash:  file.FileHash,
-			AuthorID:  file.AuthorID,
-			CreatedAt: file.CreatedAt,
-			UpdatedAt: file.UpdatedAt,
-			DeletedAt: file.DeletedAt,
-		})
-	}
-
-	return fileResponses, nil
+	return sendFilesUploadResponse(files, err)
 }
 
 // GetFileUploadByFileHash implements FileUploadService.
@@ -103,51 +113,13 @@ func (f *fileUploadServiceImpl) GetFileUploadByFileName(fileName string) (respon
 // GetFilesUploadByAuthorID implements FileUploadService.
 func (f *fileUploadServiceImpl) GetFilesUploadByAuthorID(authorID string) ([]response.FileUploadResponse, error) {
 	files, err := f.fileRepo.GetFilesUploadByAuthorID(authorID)
-	if err != nil {
-		return nil, err
-	}
-
-	var fileResponses []response.FileUploadResponse
-	for _, file := range files {
-		fileResponses = append(fileResponses, response.FileUploadResponse{
-			ID:        file.ID,
-			FileName:  file.FileName,
-			FileType:  file.FileType,
-			FileUri:   file.FileUri,
-			FileHash:  file.FileHash,
-			AuthorID:  file.AuthorID,
-			CreatedAt: file.CreatedAt,
-			UpdatedAt: file.UpdatedAt,
-			DeletedAt: file.DeletedAt,
-		})
-	}
-
-	return fileResponses, nil
+	return sendFilesUploadResponse(files, err)
 }
 
 // GetFilesUploadByFileName implements FileUploadService.
 func (f *fileUploadServiceImpl) GetFilesUploadByFileName(fileName string) ([]response.FileUploadResponse, error) {
 	files, err := f.fileRepo.GetFilesUploadByFileName(fileName)
-	if err != nil {
-		return nil, err
-	}
-
-	var fileResponses []response.FileUploadResponse
-	for _, file := range files {
-		fileResponses = append(fileResponses, response.FileUploadResponse{
-			ID:        file.ID,
-			FileName:  file.FileName,
-			FileType:  file.FileType,
-			FileUri:   file.FileUri,
-			FileHash:  file.FileHash,
-			AuthorID:  file.AuthorID,
-			CreatedAt: file.CreatedAt,
-			UpdatedAt: file.UpdatedAt,
-			DeletedAt: file.DeletedAt,
-		})
-	}
-
-	return fileResponses, nil
+	return sendFilesUploadResponse(files, err)
 }
 
 // UpdateFileUploadByAuthorID implements FileUploadService.

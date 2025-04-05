@@ -55,7 +55,7 @@ func sendUsersResponse(userModel []models.User, err error) ([]response.UserRespo
 	if err != nil {
 		return nil, err
 	}
-	var users []response.UserResponse
+	users := make([]response.UserResponse, 0, len(userModel))
 	for _, user := range userModel {
 		var roleResp *response.RoleResponse
 		if user.Role != nil {
@@ -84,6 +84,18 @@ func sendUsersResponse(userModel []models.User, err error) ([]response.UserRespo
 		})
 	}
 	return users, nil
+}
+
+// GetUsersWithFilters implements UserService.
+func (u *UsersServiceImpl) GetUsersWithFilters(filters map[string]interface{}) ([]response.UserResponse, error) {
+	result, err := u.UserRepo.GetUsersWithFilters(filters)
+	return sendUsersResponse(result, err)
+}
+
+// GetUsersByCallSign implements UserService.
+func (u *UsersServiceImpl) GetUsersByCallSign(callsign string) ([]response.UserResponse, error) {
+	result, err := u.UserRepo.GetUsersByCallSign(callsign)
+	return sendUsersResponse(result, err)
 }
 
 // GetAll implements UserService.

@@ -2,9 +2,9 @@ package controllers
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"os"
-	"path/filepath"
 	"time"
 
 	"github.com/cocoth/linknet-api/src/controllers/helper"
@@ -59,23 +59,6 @@ func (f *FileController) UploadFile(c *gin.Context) {
 		return
 	}
 
-	uploadDir := os.Getenv("APP_UPLOAD_DIR")
-	if uploadDir == "" {
-		uploadDir = "./uploads"
-	}
-
-	if _, err := os.Stat(uploadDir); os.IsNotExist(err) {
-		os.Mkdir(uploadDir, os.ModePerm)
-	}
-
-	filePath := filepath.Join(uploadDir, file.Filename)
-
-	// Check if file already exists on the file system
-	if _, err := os.Stat(filePath); err == nil {
-		helper.RespondWithError(c, 400, "File already exists on the server")
-		return
-	}
-
 	fileBytes, _ := file.Open()
 	defer fileBytes.Close()
 
@@ -87,8 +70,19 @@ func (f *FileController) UploadFile(c *gin.Context) {
 		return
 	}
 
-	// Upload the file to specific dir
-	if err := c.SaveUploadedFile(file, filePath); err != nil {
+	fileBytes.Seek(0, io.SeekStart)
+
+	uploadDir := os.Getenv("APP_UPLOAD_DIR")
+	if uploadDir == "" {
+		uploadDir = "./uploads"
+	}
+
+	if _, err := os.Stat(uploadDir); os.IsNotExist(err) {
+		os.Mkdir(uploadDir, os.ModePerm)
+	}
+
+	filePath, err := utils.SaveMultipartFile(file)
+	if err != nil {
 		helper.RespondWithError(c, 400, err.Error())
 		return
 	}
@@ -99,17 +93,16 @@ func (f *FileController) UploadFile(c *gin.Context) {
 		return
 	}
 
-	fileUploadRequest.FileName = file.Filename
-	fileBytes2, _ := file.Open()
-	defer fileBytes2.Close()
+	fileBytes.Seek(0, io.SeekStart)
 
 	buffer := make([]byte, 512)
-	_, err = fileBytes2.Read(buffer)
+	_, err = fileBytes.Read(buffer)
 	if err != nil {
 		helper.RespondWithError(c, 500, "Failed to read file content")
 		return
 	}
 
+	fileUploadRequest.FileName = file.Filename
 	fileUploadRequest.FileType = http.DetectContentType(buffer)
 	fileUploadRequest.FileUri = filePath
 	fileUploadRequest.FileHash = fileHash
@@ -126,49 +119,36 @@ func (f *FileController) UploadFile(c *gin.Context) {
 }
 
 func (f *FileController) GetAllFileUpload(c *gin.Context) {
-	var files []response.FileUploadResponse
-	var err error
 
 	qFileID := c.Query("id")
 	qFileName := c.Query("filename")
 	qfileHash := c.Query("filehash")
 	qAuthorID := c.Query("authorid")
 
-	if qFileID != "" {
-		file, err := f.fileService.GetFileUploadByFileID(qFileID)
-		if err != nil {
-			helper.RespondWithError(c, http.StatusNotFound, "File not found")
-			return
-		}
-		helper.RespondWithSuccess(c, http.StatusOK, file)
-		return
-	} else if qFileName != "" {
-		files, err = f.fileService.GetFilesUploadByFileName(qFileName)
-		if err != nil {
-			helper.RespondWithError(c, http.StatusNotFound, "File not found")
-			return
-		}
-	} else if qfileHash != "" {
-		file, err := f.fileService.GetFileUploadByFileHash(qfileHash)
-		if err != nil {
-			helper.RespondWithError(c, http.StatusNotFound, "File not found")
-			return
-		}
-		helper.RespondWithSuccess(c, http.StatusOK, file)
-		return
-	} else if qAuthorID != "" {
-		files, err = f.fileService.GetFilesUploadByAuthorID(qAuthorID)
-		if err != nil {
-			helper.RespondWithError(c, http.StatusNotFound, "File not found")
-			return
-		}
-	} else {
-		files, err = f.fileService.GetAllFileUpload()
+	filters := map[string]interface{}{}
 
+	if qFileID != "" {
+		filters["id"] = qFileID
 	}
+	if qFileName != "" {
+		filters["filename"] = qFileName
+	}
+	if qfileHash != "" {
+		filters["filehash"] = qfileHash
+	}
+	if qAuthorID != "" {
+		filters["authorid"] = qAuthorID
+	}
+
+	files, err := f.fileService.GetFilesWithFilters(filters)
 
 	if err != nil {
 		helper.RespondWithError(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if len(files) == 0 {
+		helper.RespondWithError(c, http.StatusNotFound, "No Files found with that given filters")
 		return
 	}
 	helper.RespondWithSuccess(c, http.StatusOK, files)
@@ -199,7 +179,7 @@ func (f *FileController) UpdateFileUpload(c *gin.Context) {
 	hash := utils.CalculateHashByBuffer(fileBytes)
 	// Check if file already exists in the database
 	existingFile, err := f.fileService.GetFileUploadByFileHash(hash)
-	if err == nil && existingFile != (response.FileUploadResponse{}) {
+	if err == nil && existingFile != (response.FileUploadResponse{}) && existingFile.ID != file.ID {
 		helper.RespondWithError(c, 400, "File already exists in the database")
 		return
 	}
@@ -226,13 +206,6 @@ func (f *FileController) UpdateFileUpload(c *gin.Context) {
 		return
 	}
 
-	uploadDir := os.Getenv("APP_UPLOAD_DIR")
-	if uploadDir == "" {
-		uploadDir = "./uploads"
-	}
-
-	filePath := filepath.Join(uploadDir, Updatedfile.Filename)
-
 	// Remove the old file from the file system
 	err = os.Remove(file.FileUri)
 
@@ -241,8 +214,13 @@ func (f *FileController) UpdateFileUpload(c *gin.Context) {
 		return
 	}
 
-	// Save the new file to the file system
-	if err := c.SaveUploadedFile(Updatedfile, filePath); err != nil {
+	uploadDir := os.Getenv("APP_UPLOAD_DIR")
+	if uploadDir == "" {
+		uploadDir = "./uploads"
+	}
+
+	filePath, err := utils.SaveMultipartFile(Updatedfile)
+	if err != nil {
 		helper.RespondWithError(c, 400, err.Error())
 		return
 	}
@@ -253,17 +231,16 @@ func (f *FileController) UpdateFileUpload(c *gin.Context) {
 		return
 	}
 
-	fileReq.FileName = Updatedfile.Filename
-	fileBytes2, _ := Updatedfile.Open()
-	defer fileBytes2.Close()
+	fileBytes.Seek(0, io.SeekStart)
 
 	buffer := make([]byte, 512)
-	_, err = fileBytes2.Read(buffer)
+	_, err = fileBytes.Read(buffer)
 	if err != nil {
 		helper.RespondWithError(c, 500, "Failed to read file content")
 		return
 	}
 
+	fileReq.FileName = Updatedfile.Filename
 	fileReq.FileType = http.DetectContentType(buffer)
 	fileReq.FileUri = filePath
 	fileReq.FileHash = fileHash

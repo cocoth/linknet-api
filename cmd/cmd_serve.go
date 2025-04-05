@@ -7,7 +7,7 @@ import (
 
 	"github.com/cocoth/linknet-api/src/controllers"
 	"github.com/cocoth/linknet-api/src/database"
-	"github.com/cocoth/linknet-api/src/http/middleware"
+	"github.com/cocoth/linknet-api/src/http/middlewares"
 	"github.com/cocoth/linknet-api/src/repo"
 	"github.com/cocoth/linknet-api/src/routes"
 	"github.com/cocoth/linknet-api/src/services"
@@ -37,7 +37,7 @@ var serveCmd = &cobra.Command{
 	Short: "Start the server",
 	Long:  "Start the server",
 	Run: func(cmd *cobra.Command, args []string) {
-		ServerConfig()
+		CmdConfig()
 		InitializeAndRunServer()
 	},
 }
@@ -57,7 +57,7 @@ func init() {
 	RootCmd.AddCommand(serveCmd)
 }
 
-func ServerConfig() {
+func CmdConfig() {
 	if appDb == "" {
 		appDb = os.Getenv("APP_DB")
 		if appDb == "" {
@@ -168,6 +168,19 @@ func ServerConfig() {
 
 func InitializeAndRunServer() {
 	db := database.DB
+	if _, err := os.Stat("config/allowOrigin.config"); os.IsNotExist(err) {
+		err := os.MkdirAll("config", os.ModePerm)
+		if err != nil {
+			fmt.Println("Error creating config directory:", err)
+			return
+		}
+		err = os.WriteFile("config/allowOrigin.config", []byte("http://localhost:3000\nhttp://localhost:3001"), 0644)
+		if err != nil {
+			fmt.Println("Error creating allowOrigin.config file:", err)
+			return
+		}
+	}
+
 	allowOrigin, err := utils.ReadFileLines("config/allowOrigin.config")
 	if err != nil {
 		fmt.Println("Error reading allow origin file", err)
@@ -197,6 +210,7 @@ func InitializeAndRunServer() {
 	userRepo := repo.NewUserRepoImpl(db)
 	fileUploadRepo := repo.NewFileUploadRepoImpl(db)
 	surveyRepo := repo.NewSurveyRepoImpl(db)
+	surveyReportRepo := repo.NewSurveyReportRepoImpl(db)
 	filePermRepo := repo.NewFilePermRepoImpl(db)
 	notifRepo := repo.NewNotifyRepoImpl(db)
 
@@ -205,20 +219,23 @@ func InitializeAndRunServer() {
 	fileUploadService := services.NewFileUploadServiceImpl(fileUploadRepo)
 	filePermService := services.NewFilePermServceImpl(filePermRepo)
 	surveyService := services.NewSurveyServiceImpl(surveyRepo)
+	surveyReportService := services.NewSurveyReportServiceImpl(surveyReportRepo)
 	notifService := services.NewNotifyServiceImpl(notifRepo)
 
-	authMiddleware := middleware.NewUserAuthorization(userService)
+	authMiddleware := middlewares.NewUserAuthorization(userService)
 
 	userCtrl := controllers.NewUserController(userService)
 	authCtrl := controllers.NewAuthController(authService)
 	fileCtrl := controllers.NewFileController(fileUploadService, filePermService, userService)
 	surveyCtrl := controllers.NewSurveyController(surveyService, userService)
+	reportCtrl := controllers.NewSurveyReportController(surveyReportService, userService)
 	notifCtrl := controllers.NewNotifyController(notifService)
 
 	routes.AuthRoute(authMiddleware, authCtrl, v1)
-	routes.UserRoute(userCtrl, v1)
-	routes.FileRoute(fileCtrl, v1)
-	routes.SurveyRoute(surveyCtrl, v1)
+	routes.UserRoute(authMiddleware, userCtrl, v1)
+	routes.FileRoute(authMiddleware, fileCtrl, v1)
+	routes.SurveyRoute(authMiddleware, surveyCtrl, v1)
+	routes.SurveyReportRoute(authMiddleware, reportCtrl, v1)
 	routes.NotificationRoute(notifCtrl, v1)
 
 	StartServer(r, appHost, appPort)

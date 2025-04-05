@@ -52,7 +52,7 @@ func sendSurveysResponse(surveyModel []models.Survey, err error) ([]response.Sur
 	if err != nil {
 		return nil, err
 	}
-	var surveys []response.SurveyResponse
+	surveys := make([]response.SurveyResponse, 0, len(surveyModel))
 	for _, survey := range surveyModel {
 		var surveyors []response.SurveyorLinkResponse
 		for _, surveyor := range survey.Surveyors {
@@ -84,6 +84,12 @@ func sendSurveysResponse(surveyModel []models.Survey, err error) ([]response.Sur
 	}
 	return surveys, nil
 
+}
+
+// GetSurveysWithFilters implements SurveyService.
+func (s *SurveyServiceImpl) GetSurveysWithFilters(filters map[string]interface{}) ([]response.SurveyResponse, error) {
+	survey, err := s.surveyRepo.GetSurveysWithFilters(filters)
+	return sendSurveysResponse(survey, err)
 }
 
 // GetAllSurvey implements SurveyService.

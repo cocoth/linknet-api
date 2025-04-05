@@ -9,6 +9,51 @@ type SurveyReportImpl struct {
 	db *gorm.DB
 }
 
+// GetSurveysUploadWithFilters implements SurveyReportRepo.
+func (s *SurveyReportImpl) GetSurveyReportsUploadWithFilters(filters map[string]interface{}) ([]models.SurveyReport, error) {
+	var reports []models.SurveyReport
+
+	query := s.db.Model(&models.SurveyReport{})
+
+	if id, ok := filters["id"]; ok {
+		query = query.Where("id = ?", id)
+	}
+	if status, ok := filters["status"]; ok {
+		query = query.Where("status = ?", status)
+	}
+	if remark, ok := filters["remark"]; ok {
+		query = query.Where("remark LIKE ?", "%"+remark.(string)+"%")
+	}
+
+	err := query.Find(&reports).Error
+	if err != nil {
+		return nil, err
+	}
+	return reports, nil
+}
+
+// GetSurveysReportByRemark implements SurveyReportRepo.
+func (s *SurveyReportImpl) GetSurveysReportByRemark(remark string) ([]models.SurveyReport, error) {
+	var reports []models.SurveyReport
+
+	err := s.db.Where("remark LIKE ?", "%"+remark+"%").Find(&reports).Error
+	if err != nil {
+		return nil, err
+	}
+	return reports, nil
+}
+
+// GetSurveysReportByStatus implements SurveyReportRepo.
+func (s *SurveyReportImpl) GetSurveysReportByStatus(status string) ([]models.SurveyReport, error) {
+	var reports []models.SurveyReport
+
+	err := s.db.Where("status LIKE ?", "%"+status+"%").Find(&reports).Error
+	if err != nil {
+		return nil, err
+	}
+	return reports, nil
+}
+
 // GetAllSurveyReport implements SurveyReportRepo.
 func (s *SurveyReportImpl) GetAllSurveyReport() ([]models.SurveyReport, error) {
 	var reports []models.SurveyReport
@@ -90,6 +135,6 @@ func (s *SurveyReportImpl) DeleteSurveyReport(id string) (models.SurveyReport, e
 	return report, nil
 }
 
-func NewSurveyReportImpl(db *gorm.DB) SurveyReportRepo {
+func NewSurveyReportRepoImpl(db *gorm.DB) SurveyReportRepo {
 	return &SurveyReportImpl{db: db}
 }

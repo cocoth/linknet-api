@@ -11,6 +11,55 @@ type userRepoImpl struct {
 	Db *gorm.DB
 }
 
+// GetUsersWithFilters implements UserRepo.
+func (u *userRepoImpl) GetUsersWithFilters(filters map[string]interface{}) ([]models.User, error) {
+	var users []models.User
+	query := u.Db.Preload("Role")
+
+	// Tambahkan filter dinamis berdasarkan parameter yang diberikan
+	if id, ok := filters["id"]; ok {
+		query = query.Where("id = ?", id)
+	}
+	if role, ok := filters["role"]; ok {
+		query = query.Joins("JOIN roles ON roles.id = users.role_id").Where("roles.name = ?", role)
+	}
+	if email, ok := filters["email"]; ok {
+		query = query.Where("email LIKE ?", "%"+email.(string)+"%")
+	}
+	if callsign, ok := filters["callsign"]; ok {
+		query = query.Where("call_sign = ?", callsign)
+	}
+	if contractor, ok := filters["contractor"]; ok {
+		query = query.Where("contractor = ?", contractor)
+	}
+	if phone, ok := filters["phone"]; ok {
+		query = query.Where("phone LIKE ?", "%"+phone.(string)+"%")
+	}
+	if status, ok := filters["status"]; ok {
+		query = query.Where("status = ?", status)
+	}
+	if name, ok := filters["name"]; ok {
+		query = query.Where("name LIKE ?", "%"+name.(string)+"%")
+	}
+
+	// Eksekusi query
+	err := query.Find(&users).Error
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
+}
+
+// GetUsersByCallSign implements UserRepo.
+func (u *userRepoImpl) GetUsersByCallSign(callsign string) ([]models.User, error) {
+	var users []models.User
+	err := u.Db.Preload("Role").Where("call_sign = ?", callsign).Find(&users).Error
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
+}
+
 // GetAllRole implements UserRepo.
 func (u *userRepoImpl) GetAllRole() ([]models.Role, error) {
 	var roles []models.Role
@@ -153,10 +202,10 @@ func (u *userRepoImpl) GetUsersByPhone(phone string) ([]models.User, error) {
 	return users, nil
 }
 
-// GetUserByRole implements UserRepo.
+// GetUsersByRole implements UserRepo.
 func (u *userRepoImpl) GetUsersByRole(role string) ([]models.User, error) {
 	var users []models.User
-	err := u.Db.Preload("Role").Joins("JOIN roles ON roles.id = users.role_id").Where("roles.name = ?", role).Find(&users).Error
+	err := u.Db.Preload("Role").Where("roles.name = ?", role).Joins("JOIN roles ON roles.id = users.role_id").Find(&users).Error
 	if err != nil {
 		return nil, err
 	}

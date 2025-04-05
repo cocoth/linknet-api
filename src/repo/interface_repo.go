@@ -30,6 +30,9 @@ type UserRepo interface {
 	GetUsersByRole(role string) ([]models.User, error)
 	GetUsersByStatus(status string) ([]models.User, error)
 	GetUsersByContractor(contractor string) ([]models.User, error)
+	GetUsersByCallSign(callsign string) ([]models.User, error)
+
+	GetUsersWithFilters(filters map[string]interface{}) ([]models.User, error)
 
 	GetDeletedUsersByEmail(email string) ([]models.User, error)
 	GetDeletedUsersByName(name string) ([]models.User, error)
@@ -59,6 +62,8 @@ type FileUploadRepo interface {
 	GetFilesUploadByAuthorName(authorName string) ([]models.FileUpload, error)
 	GetFilesUploadByFileName(fileName string) ([]models.FileUpload, error)
 
+	GetFilesUploadWithFilters(filters map[string]interface{}) ([]models.FileUpload, error)
+
 	UpdateFileUpload(file models.FileUpload) (models.FileUpload, error)
 
 	DeleteFileUploadByFileID(id string) (models.FileUpload, error)
@@ -80,17 +85,15 @@ type SurveyRepo interface {
 	GetSurveyByTitle(title string) (models.Survey, error)
 	GetSurveyByFormNumber(formNumber string) (models.Survey, error)
 	GetSurveyByQuestorName(questorName string) (models.Survey, error)
-
 	GetSurveyByFAT(fat string) (models.Survey, error)
-
 	GetSurveyByCustomerName(customerName string) (models.Survey, error)
 	GetSurveyByAddress(address string) (models.Survey, error)
-
 	GetSurveyByNodeFDT(nodeFDT string) (models.Survey, error)
 	GetSurveyBySurveyDate(surveyDate time.Time) (models.Survey, error)
 	GetSurveyBySurveyorID(surveyorID string) (models.Survey, error)
-
 	GetSurveyByImageID(imageID string) (models.Survey, error)
+
+	GetSurveysWithFilters(filters map[string]interface{}) ([]models.Survey, error)
 
 	GetSurveysByTitle(title string) ([]models.Survey, error)
 	GetSurveysByQuestorName(questorName string) ([]models.Survey, error)
@@ -109,6 +112,10 @@ type SurveyReportRepo interface {
 	GetSurveyReportBySurveyID(surveyID string) (models.SurveyReport, error)
 	GetSurveyReportByRemark(remark string) (models.SurveyReport, error)
 	GetSurveyReportByStatus(status string) (models.SurveyReport, error)
+	GetSurveysReportByRemark(remark string) ([]models.SurveyReport, error)
+	GetSurveysReportByStatus(status string) ([]models.SurveyReport, error)
+
+	GetSurveyReportsUploadWithFilters(filters map[string]interface{}) ([]models.SurveyReport, error)
 
 	CreateSurveyReport(surveyReport models.SurveyReport) (models.SurveyReport, error)
 	UpdateSurveyReport(surveyReport models.SurveyReport) (models.SurveyReport, error)

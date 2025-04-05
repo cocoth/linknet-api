@@ -17,6 +17,9 @@ type UserService interface {
 	GetUsersByRole(role string) ([]response.UserResponse, error)
 	GetUsersByStatus(status string) ([]response.UserResponse, error)
 	GetUsersByContractor(contractor string) ([]response.UserResponse, error)
+	GetUsersByCallSign(callsign string) ([]response.UserResponse, error)
+
+	GetUsersWithFilters(filters map[string]interface{}) ([]response.UserResponse, error)
 
 	IsAdmin(token string) (status bool, userResponse response.UserResponse, err error)
 	CheckToken(token string) (status bool, userResponse response.UserResponse, err error)
@@ -52,6 +55,8 @@ type FileUploadService interface {
 	GetFilesUploadByAuthorID(authorID string) ([]response.FileUploadResponse, error)
 	GetFilesUploadByFileName(fileName string) ([]response.FileUploadResponse, error)
 
+	GetFilesWithFilters(filters map[string]interface{}) ([]response.FileUploadResponse, error)
+
 	UpdateFileUpload(id string, fileUpdate request.FileUploadRequest) (response.FileUploadResponse, error)
 
 	DeleteFileUploadByFileID(id string) (response.FileUploadResponse, error)
@@ -80,8 +85,9 @@ type SurveyService interface {
 	GetSurveyByNodeFDT(nodeFDT string) (response.SurveyResponse, error)
 	GetSurveyBySurveyDate(surveyDate time.Time) (response.SurveyResponse, error)
 	GetSurveyBySurveyorID(surveyorID string) (response.SurveyResponse, error)
-
 	GetSurveyByImageID(imageID string) (response.SurveyResponse, error)
+
+	GetSurveysWithFilters(filters map[string]interface{}) ([]response.SurveyResponse, error)
 
 	GetSurveysByTitle(title string) ([]response.SurveyResponse, error)
 	GetSurveysByQuestorName(questorName string) ([]response.SurveyResponse, error)
@@ -100,6 +106,11 @@ type SurveyReportService interface {
 	GetSurveyBySurveyID(surveyID string) (response.SurveyReportResponse, error)
 	GetSurveyReportByStatus(status string) (response.SurveyReportResponse, error)
 	GetSurveyReportByRemark(remark string) (response.SurveyReportResponse, error)
+
+	GetSurveyReportsByStatus(status string) ([]response.SurveyReportResponse, error)
+	GetSurveyReportsByRemark(remark string) ([]response.SurveyReportResponse, error)
+
+	GetSurveyReportsUploadWithFilters(filters map[string]interface{}) ([]response.SurveyReportResponse, error)
 
 	CreateSurveyReport(surveyReport request.SurveyReportRequest) (response.SurveyReportResponse, error)
 	UpdateSurveyReport(id string, surveyReport request.UpdateSurveyReportRequest) (response.SurveyReportResponse, error)

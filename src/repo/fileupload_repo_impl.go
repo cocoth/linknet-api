@@ -9,6 +9,31 @@ type fileUploadRepoImpl struct {
 	Db *gorm.DB
 }
 
+// GetFilesUploadWithFilters implements FileUploadRepo.
+func (f *fileUploadRepoImpl) GetFilesUploadWithFilters(filters map[string]interface{}) ([]models.FileUpload, error) {
+	var files []models.FileUpload
+	query := f.Db
+
+	if id, ok := filters["id"]; ok {
+		query = query.Where("id = ?", id)
+	}
+
+	if file_name, ok := filters["filename"]; ok {
+		query = query.Where("file_name LIKE ?", "%"+file_name.(string)+"%")
+	}
+	if file_hash, ok := filters["filehash"]; ok {
+		query = query.Where("file_hash = ?", file_hash)
+	}
+	if author_id, ok := filters["authorid"]; ok {
+		query = query.Where("author_id = ?", author_id)
+	}
+
+	if err := query.Find(&files).Error; err != nil {
+		return nil, err
+	}
+	return files, nil
+}
+
 // UploadFile implements FileUploadRepo.
 func (f *fileUploadRepoImpl) UploadFile(file models.FileUpload) (models.FileUpload, error) {
 	if err := f.Db.Create(&file).Error; err != nil {

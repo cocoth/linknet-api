@@ -49,10 +49,10 @@ func (s *Survey) BeforeCreate(tx *gorm.DB) error {
 type SurveyReport struct {
 	ID        string      `gorm:"type:varchar(36);primaryKey" json:"id"`
 	SurveyID  string      `json:"survey_id"`
-	Survey    Survey      `gorm:"foreignKey:SurveyID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"survey"`
-	Remark    string      `json:"remark"`
-	Status    string      `gorm:"type:enum('standard','reject','incomplete');default:'incomplete'" json:"status"`
-	ImageID   *string     `json:"image_id"`
+	Survey    Survey      `gorm:"foreignKey:SurveyID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"-"`
+	Remark    string      `gorm:"type:text" json:"remark"`
+	Status    string      `gorm:"type:varchar(20);default:'incomplete'" json:"status"`
+	ImageID   *string     `gorm:"type:varchar(36)" json:"image_id"`
 	Image     *FileUpload `gorm:"foreignKey:ImageID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"image"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
@@ -60,6 +60,21 @@ type SurveyReport struct {
 }
 
 func (s *SurveyReport) BeforeCreate(tx *gorm.DB) error {
+	s.ID = uuid.New().String()
+	return nil
+}
+
+type ISmart struct {
+	ID           string `gorm:"type:varchar(36);primaryKey" json:"id"`
+	FiberNode    string `json:"fiber_node"`
+	Address      string `json:"address"`
+	CustomerName string `json:"customer_name"`
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+	DeletedAt    *time.Time `gorm:"index"`
+}
+
+func (s *ISmart) BeforeCreate(tx *gorm.DB) error {
 	s.ID = uuid.New().String()
 	return nil
 }
