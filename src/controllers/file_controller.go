@@ -152,10 +152,13 @@ func (f *FileController) UpdateFileUpload(c *gin.Context) {
 	currentResUser := token.(response.UserResponse)
 
 	if currentResUser.ID != fileReq.AuthorID {
-		if currentResUser.Role.Name != "admin" {
-			helper.RespondWithError(c, http.StatusUnauthorized, "only admin or the file owner can update the file!")
-			return
-		}
+		helper.RespondWithError(c, http.StatusUnauthorized, "only admin or the file owner can update the file!")
+		return
+	}
+
+	if currentResUser.Role.Name != "admin" {
+		helper.RespondWithError(c, http.StatusUnauthorized, "only admin or the file owner can update the file!")
+		return
 	}
 
 	qFileID := c.Param("id")
