@@ -287,6 +287,32 @@ func (f *FileController) DeleteFileUpload(c *gin.Context) {
 	qFileName := c.Query("filename")
 	qfileHash := c.Query("filehash")
 
+	token, exsist := c.Get("current_user")
+	if !exsist {
+		helper.RespondWithError(c, http.StatusUnauthorized, "No token provided")
+		return
+	}
+	currentResUser := token.(response.UserResponse)
+
+	file, err = f.fileService.GetFileUploadByFileID(qFileID)
+	if err != nil {
+		helper.RespondWithError(c, http.StatusNotFound, "File not found")
+		return
+	}
+
+	var idf string
+	if file.AuthorID != nil {
+		idf = *file.AuthorID
+	} else {
+		helper.RespondWithError(c, http.StatusUnauthorized, "File author ID is missing")
+		return
+	}
+
+	if currentResUser.ID != idf && currentResUser.Role.Name != "admin" {
+		helper.RespondWithError(c, http.StatusUnauthorized, "only admin or the file owner can delete the file!")
+		return
+	}
+
 	if qFileID != "" {
 		file, err = f.fileService.DeleteFileUploadByFileID(qFileID)
 		if err != nil {
