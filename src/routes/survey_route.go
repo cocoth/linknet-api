@@ -20,11 +20,11 @@ func SurveyReportRoute(authMiddleware *middlewares.UserAuthorization, surveyRepo
 	rg.DELETE("/reports/:id", authMiddleware.Authorize, surveyReportController.DeleteSurveyReport)
 }
 
-func NotificationRoute(notifController *controllers.NotifyController, rg *gin.RouterGroup) {
-	rg.GET("/notif", notifController.GetAllNotify)
-	rg.POST("/notif", notifController.CreateNotify)
-	rg.DELETE("/notif/:id", notifController.DeleteNotify)
+func NotificationRoute(authMiddleware *middlewares.UserAuthorization, notifController *controllers.NotifyController, rg *gin.RouterGroup) {
+	rg.GET("/notif", authMiddleware.Authorize, notifController.GetAllNotify)
+	rg.POST("/notif", authMiddleware.Authorize, notifController.CreateNotify)
+	rg.DELETE("/notif/:id", authMiddleware.Authorize, notifController.DeleteNotify)
 
 	// Websocket
-	rg.GET("/ws/notif", controllers.HandleWebsocketConnection)
+	rg.GET("/ws/notif", authMiddleware.Authorize, controllers.HandleWebsocketConnection)
 }

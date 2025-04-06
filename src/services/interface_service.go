@@ -11,6 +11,8 @@ type UserService interface {
 	GetAll() ([]response.UserResponse, error)
 	GetUserById(id string) (response.UserResponse, error)
 
+	GetAdmins() ([]response.UserResponse, error)
+
 	GetUsersByName(name string) ([]response.UserResponse, error)
 	GetUsersByEmail(email string) ([]response.UserResponse, error)
 	GetUsersByPhone(phone string) ([]response.UserResponse, error)

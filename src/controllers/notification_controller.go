@@ -83,7 +83,7 @@ func (n *NotifyController) CreateNotify(c *gin.Context) {
 		helper.RespondWithError(c, http.StatusBadRequest, err.Error())
 		return
 	}
-	SendNotification(notif)
+	SendNotification(notif.UserID, notif)
 	helper.RespondWithSuccess(c, http.StatusCreated, notif)
 }
 
@@ -98,7 +98,7 @@ func (n *NotifyController) UpdateNotify(c *gin.Context) {
 		helper.RespondWithError(c, http.StatusBadRequest, err.Error())
 		return
 	}
-	SendNotification(notif)
+	SendNotification(notif.UserID, notif)
 	helper.RespondWithSuccess(c, http.StatusOK, notif)
 }
 

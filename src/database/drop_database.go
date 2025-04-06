@@ -13,7 +13,6 @@ func DropTables() {
 		&models.User{},
 		&models.FileUpload{},
 		&models.FileAccessRequest{},
-		&models.FileAccess{},
 		&models.Notify{},
 		&models.Survey{},
 		&models.SurveyorLink{},

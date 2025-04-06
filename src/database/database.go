@@ -55,7 +55,6 @@ func ConnectToDB() {
 		&models.User{},
 		&models.FileUpload{},
 		&models.FileAccessRequest{},
-		&models.FileAccess{},
 		&models.Notify{},
 		&models.Survey{},
 		&models.SurveyorLink{},

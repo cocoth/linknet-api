@@ -41,19 +41,3 @@ func (f *FileAccessRequest) BeforeCreate(tx *gorm.DB) error {
 	f.ID = uuid.New().String()
 	return nil
 }
-
-type FileAccess struct {
-	ID         string      `gorm:"type:varchar(36);primaryKey" json:"id"`
-	FileID     string      `json:"file_id"`
-	FileUpload *FileUpload `gorm:"foreignKey:FileID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"file_upload"`
-	UserID     string      `json:"requestor_id"`
-	User       *User       `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"requestor"`
-	CreatedAt  time.Time
-	UpdatedAt  time.Time
-	DeletedAt  *time.Time `gorm:"index"`
-}
-
-func (f *FileAccess) BeforeCreate(tx *gorm.DB) error {
-	f.ID = uuid.New().String()
-	return nil
-}

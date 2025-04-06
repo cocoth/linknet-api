@@ -239,7 +239,7 @@ func InitializeAndRunServer() {
 	routes.FileRoute(authMiddleware, fileCtrl, v1)
 	routes.SurveyRoute(authMiddleware, surveyCtrl, v1)
 	routes.SurveyReportRoute(authMiddleware, reportCtrl, v1)
-	routes.NotificationRoute(notifCtrl, v1)
+	routes.NotificationRoute(authMiddleware, notifCtrl, v1)
 	routes.ISmartRoute(authMiddleware, ismartCtrl, v1)
 
 	StartServer(r, appHost, appPort)

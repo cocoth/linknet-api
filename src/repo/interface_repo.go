@@ -7,6 +7,8 @@ import (
 )
 
 type UserRepo interface {
+	GetAdmins() ([]models.User, error)
+
 	GetAllRole() ([]models.Role, error)
 	CreateRole(role models.Role) (models.Role, error)
 	GetOrCreateRole(name string, role *models.Role) error

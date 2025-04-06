@@ -11,6 +11,16 @@ type userRepoImpl struct {
 	Db *gorm.DB
 }
 
+// GetAdmins implements UserRepo.
+func (u *userRepoImpl) GetAdmins() ([]models.User, error) {
+	var users []models.User
+	err := u.Db.Preload("Role").Where("roles.name = ?", "admin").Joins("JOIN roles ON roles.id = users.role_id").Find(&users).Error
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
+}
+
 // GetUsersWithFilters implements UserRepo.
 func (u *userRepoImpl) GetUsersWithFilters(filters map[string]interface{}) ([]models.User, error) {
 	var users []models.User

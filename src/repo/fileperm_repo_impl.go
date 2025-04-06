@@ -50,7 +50,7 @@ func (f *filePermRepoImpl) RequestAccess(userID string, fileID string) error {
 			perm = models.FileAccessRequest{
 				UserID:   userID,
 				FileID:   fileID,
-				Approved: true,
+				Approved: false,
 			}
 			return f.db.Create(&perm).Error
 		}
@@ -59,7 +59,7 @@ func (f *filePermRepoImpl) RequestAccess(userID string, fileID string) error {
 	}
 
 	// Update the existing record
-	perm.Approved = true
+	perm.Approved = false
 	return f.db.Save(&perm).Error
 }
 

@@ -86,6 +86,12 @@ func sendUsersResponse(userModel []models.User, err error) ([]response.UserRespo
 	return users, nil
 }
 
+// GetAdmins implements UserService.
+func (u *UsersServiceImpl) GetAdmins() ([]response.UserResponse, error) {
+	result, err := u.UserRepo.GetAdmins()
+	return sendUsersResponse(result, err)
+}
+
 // GetUsersWithFilters implements UserService.
 func (u *UsersServiceImpl) GetUsersWithFilters(filters map[string]interface{}) ([]response.UserResponse, error) {
 	result, err := u.UserRepo.GetUsersWithFilters(filters)

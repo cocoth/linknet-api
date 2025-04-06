@@ -238,11 +238,33 @@ func (f *FileController) UpdateFileUpload(c *gin.Context) {
 
 func (f *FileController) DownloadFile(c *gin.Context) {
 	var file response.FileUploadResponse
+	// var perm response.FilePermRequest
 	var err error
 
 	qFileID := c.Query("id")
 	qFileName := c.Query("filename")
 	qfileHash := c.Query("filehash")
+
+	token, exsist := c.Get("current_user")
+	if !exsist {
+		helper.RespondWithError(c, http.StatusUnauthorized, "No token provided")
+		return
+	}
+	currentResUser := token.(response.UserResponse)
+
+	hasAccess, err := f.filePermService.CheckAccess(request.FilePermRequest{
+		UserID: currentResUser.ID,
+		FileID: qFileID,
+	})
+
+	if err != nil {
+		helper.RespondWithError(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	if !hasAccess {
+		helper.RespondWithError(c, http.StatusForbidden, "You do not have access to this file")
+		return
+	}
 
 	if qFileID != "" {
 		file, err = f.fileService.GetFileUploadByFileID(qFileID)
@@ -348,18 +370,20 @@ func (f *FileController) DeleteFileUpload(c *gin.Context) {
 func (f *FileController) RequestAccess(c *gin.Context) {
 	var filePermission request.FilePermRequest
 
-	token, err := c.Cookie("session_token")
-	if err != nil {
+	token, exsist := c.Get("current_user")
+	if !exsist {
 		helper.RespondWithError(c, http.StatusUnauthorized, "No token provided")
 		return
 	}
-	isadmin, _, errPerm := f.userService.IsAdmin(token)
-	if errPerm != nil {
-		helper.RespondWithError(c, http.StatusUnauthorized, errPerm.Error())
+	currentResUser := token.(response.UserResponse)
+
+	admin, err := f.userService.GetAdmins()
+	if err != nil {
+		helper.RespondWithError(c, http.StatusInternalServerError, err.Error())
 		return
 	}
-	if !isadmin {
-		helper.RespondWithError(c, http.StatusUnauthorized, "only admin can access this!")
+	if len(admin) == 0 {
+		helper.RespondWithError(c, http.StatusInternalServerError, "No admin found")
 		return
 	}
 
@@ -373,24 +397,34 @@ func (f *FileController) RequestAccess(c *gin.Context) {
 		helper.RespondWithError(c, http.StatusInternalServerError, errReq.Error())
 		return
 	}
+
+	for _, adminUser := range admin {
+		notify := response.NotifyResponse{
+			UserID:        currentResUser.ID,
+			FileID:        filePermission.FileID,
+			NotifyStatus:  "pending",
+			NotifyType:    "File-Access-Request",
+			NotifyMessage: fmt.Sprintf("User: %s requested access to file: %s", currentResUser.Name, filePermission.FileID),
+			IsRead:        false,
+		}
+		SendNotification(adminUser.ID, notify)
+	}
+
 	helper.RespondWithSuccess(c, http.StatusOK, "Access requested successfully")
 }
 
 func (f *FileController) ApproveAccess(c *gin.Context) {
 	var filePermission request.FilePermRequest
 
-	token, err := c.Cookie("session_token")
-	if err != nil {
+	token, exsist := c.Get("current_user")
+	if !exsist {
 		helper.RespondWithError(c, http.StatusUnauthorized, "No token provided")
 		return
 	}
-	isadmin, _, errPerm := f.userService.IsAdmin(token)
-	if errPerm != nil {
-		helper.RespondWithError(c, http.StatusUnauthorized, errPerm.Error())
-		return
-	}
-	if !isadmin {
-		helper.RespondWithError(c, http.StatusUnauthorized, "only admin can access this!")
+	currentResUser := token.(response.UserResponse)
+
+	if currentResUser.Role.Name != "admin" {
+		helper.RespondWithError(c, http.StatusUnauthorized, "only admin can approve access!")
 		return
 	}
 
@@ -404,24 +438,31 @@ func (f *FileController) ApproveAccess(c *gin.Context) {
 		helper.RespondWithError(c, http.StatusInternalServerError, errReq.Error())
 		return
 	}
+
+	notify := response.NotifyResponse{
+		UserID:        currentResUser.ID,
+		FileID:        filePermission.FileID,
+		NotifyStatus:  "approved",
+		NotifyType:    "File-Access-Approved",
+		NotifyMessage: fmt.Sprintf("Your request to access file: %s has been approved", filePermission.FileID),
+		IsRead:        false,
+	}
+	SendNotification(filePermission.UserID, notify)
 	helper.RespondWithSuccess(c, http.StatusOK, "Access Approved")
 }
 
 func (f *FileController) RejectAccess(c *gin.Context) {
 	var filePermission request.FilePermRequest
 
-	token, err := c.Cookie("session_token")
-	if err != nil {
+	token, exsist := c.Get("current_user")
+	if !exsist {
 		helper.RespondWithError(c, http.StatusUnauthorized, "No token provided")
 		return
 	}
-	isadmin, _, err := f.userService.IsAdmin(token)
-	if err != nil {
-		helper.RespondWithError(c, http.StatusUnauthorized, err.Error())
-		return
-	}
-	if !isadmin {
-		helper.RespondWithError(c, http.StatusUnauthorized, "only admin can access this!")
+	currentResUser := token.(response.UserResponse)
+
+	if currentResUser.Role.Name != "admin" {
+		helper.RespondWithError(c, http.StatusUnauthorized, "only admin can approve access!")
 		return
 	}
 
@@ -435,5 +476,14 @@ func (f *FileController) RejectAccess(c *gin.Context) {
 		helper.RespondWithError(c, http.StatusInternalServerError, errReq.Error())
 		return
 	}
+	notify := response.NotifyResponse{
+		UserID:        currentResUser.ID,
+		FileID:        filePermission.FileID,
+		NotifyStatus:  "rejected",
+		NotifyType:    "File-Access-Approved",
+		NotifyMessage: fmt.Sprintf("Your request to access file: %s has been rejected", filePermission.FileID),
+		IsRead:        false,
+	}
+	SendNotification(filePermission.UserID, notify)
 	helper.RespondWithSuccess(c, http.StatusOK, "Access Rejected")
 }
