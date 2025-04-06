@@ -53,15 +53,6 @@ func (i *iSmartRepoImpl) GetISmartByCoordinate(coordinate string) (models.ISmart
 	return iSmart, nil
 }
 
-// GetISmartByCustomerName implements ISmartRepo.
-func (i *iSmartRepoImpl) GetISmartByCustomerName(customerName string) (models.ISmart, error) {
-	var iSmart models.ISmart
-	if err := i.db.Where("customer_name = ?", customerName).First(&iSmart).Error; err != nil {
-		return models.ISmart{}, err
-	}
-	return iSmart, nil
-}
-
 // GetISmartByFiberNode implements ISmartRepo.
 func (i *iSmartRepoImpl) GetISmartByFiberNode(fiberNode string) (models.ISmart, error) {
 	var iSmart models.ISmart
@@ -102,9 +93,6 @@ func (i *iSmartRepoImpl) GetISmartsWithFilters(filters map[string]interface{}) (
 	}
 	if address, ok := filters["address"]; ok {
 		query = query.Where("address LIKE ?", "%"+address.(string)+"%")
-	}
-	if customer_name, ok := filters["customer_name"]; ok {
-		query = query.Where("customer_name LIKE ?", "%"+customer_name.(string)+"%")
 	}
 	if coordinate, ok := filters["coordinate"]; ok {
 		query = query.Where("coordinate = ?", coordinate.(string))

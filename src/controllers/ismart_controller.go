@@ -26,7 +26,6 @@ func (i *ISmartControler) GetAllISmart(c *gin.Context) {
 	qID := c.Query("id")
 	qFiberNode := c.Query("fiber_node")
 	qAddress := c.Query("address")
-	qCustomerName := c.Query("customer_name")
 	qCoordinate := c.Query("coordinate")
 	qStreet := c.Query("street")
 
@@ -38,9 +37,6 @@ func (i *ISmartControler) GetAllISmart(c *gin.Context) {
 	}
 	if qAddress != "" {
 		filters["address"] = qAddress
-	}
-	if qCustomerName != "" {
-		filters["customer_name"] = qCustomerName
 	}
 	if qCoordinate != "" {
 		filters["coordinate"] = qCoordinate

@@ -18,15 +18,14 @@ func sendISmartResponse(iSmart models.ISmart, err error) (response.ISmartRespons
 	}
 
 	return response.ISmartResponse{
-		ID:           iSmart.ID,
-		FiberNode:    iSmart.FiberNode,
-		Address:      iSmart.Address,
-		CustomerName: iSmart.CustomerName,
-		Coordinate:   iSmart.Coordinate,
-		Street:       iSmart.Street,
-		CreatedAt:    iSmart.CreatedAt,
-		UpdatedAt:    iSmart.UpdatedAt,
-		DeletedAt:    iSmart.DeletedAt,
+		ID:         iSmart.ID,
+		FiberNode:  iSmart.FiberNode,
+		Address:    iSmart.Address,
+		Coordinate: iSmart.Coordinate,
+		Street:     iSmart.Street,
+		CreatedAt:  iSmart.CreatedAt,
+		UpdatedAt:  iSmart.UpdatedAt,
+		DeletedAt:  iSmart.DeletedAt,
 	}, nil
 }
 
@@ -37,15 +36,14 @@ func sendISmartsResponse(iSmart []models.ISmart, err error) ([]response.ISmartRe
 	ismarts := make([]response.ISmartResponse, 0, len(iSmart))
 	for _, iSmart := range iSmart {
 		ismarts = append(ismarts, response.ISmartResponse{
-			ID:           iSmart.ID,
-			FiberNode:    iSmart.FiberNode,
-			Address:      iSmart.Address,
-			CustomerName: iSmart.CustomerName,
-			Coordinate:   iSmart.Coordinate,
-			Street:       iSmart.Street,
-			CreatedAt:    iSmart.CreatedAt,
-			UpdatedAt:    iSmart.UpdatedAt,
-			DeletedAt:    iSmart.DeletedAt,
+			ID:         iSmart.ID,
+			FiberNode:  iSmart.FiberNode,
+			Address:    iSmart.Address,
+			Coordinate: iSmart.Coordinate,
+			Street:     iSmart.Street,
+			CreatedAt:  iSmart.CreatedAt,
+			UpdatedAt:  iSmart.UpdatedAt,
+			DeletedAt:  iSmart.DeletedAt,
 		})
 	}
 	return ismarts, nil
@@ -61,10 +59,6 @@ func (i *iSmartServiceImpl) CreateISmart(iSmart request.ISmartRequest) (response
 		sanitize := utils.SanitizeString(iSmart.Address)
 		iSmart.Address = sanitize
 	}
-	if iSmart.CustomerName == "" {
-		sanitize := utils.SanitizeString(iSmart.CustomerName)
-		iSmart.CustomerName = sanitize
-	}
 	if iSmart.Coordinate == "" {
 		sanitize := utils.SanitizeString(iSmart.Coordinate)
 		iSmart.Coordinate = sanitize
@@ -75,11 +69,10 @@ func (i *iSmartServiceImpl) CreateISmart(iSmart request.ISmartRequest) (response
 	}
 	// Convert request to model
 	iSmartModel := models.ISmart{
-		FiberNode:    iSmart.FiberNode,
-		Address:      iSmart.Address,
-		CustomerName: iSmart.CustomerName,
-		Coordinate:   iSmart.Coordinate,
-		Street:       iSmart.Street,
+		FiberNode:  iSmart.FiberNode,
+		Address:    iSmart.Address,
+		Coordinate: iSmart.Coordinate,
+		Street:     iSmart.Street,
 	}
 
 	// Call repository to create ISmart
@@ -108,12 +101,6 @@ func (i *iSmartServiceImpl) GetISmartByAddress(address string) (response.ISmartR
 // GetISmartByCoordinate implements ISmartService.
 func (i *iSmartServiceImpl) GetISmartByCoordinate(coordinate string) (response.ISmartResponse, error) {
 	iSmart, err := i.ismartRepository.GetISmartByCoordinate(coordinate)
-	return sendISmartResponse(iSmart, err)
-}
-
-// GetISmartByCustomerName implements ISmartService.
-func (i *iSmartServiceImpl) GetISmartByCustomerName(customerName string) (response.ISmartResponse, error) {
-	iSmart, err := i.ismartRepository.GetISmartByCustomerName(customerName)
 	return sendISmartResponse(iSmart, err)
 }
 
@@ -155,9 +142,6 @@ func (i *iSmartServiceImpl) UpdateISmart(id string, iSmart request.ISmartRequest
 	}
 	if iSmart.Address != "" {
 		existingISmart.Address = utils.SanitizeString(iSmart.Address)
-	}
-	if iSmart.CustomerName != "" {
-		existingISmart.CustomerName = utils.SanitizeString(iSmart.CustomerName)
 	}
 	if iSmart.Coordinate != "" {
 		existingISmart.Coordinate = utils.SanitizeString(iSmart.Coordinate)

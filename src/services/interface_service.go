@@ -139,7 +139,6 @@ type ISmartService interface {
 	GetISmartByID(id string) (response.ISmartResponse, error)
 	GetISmartByAddress(address string) (response.ISmartResponse, error)
 	GetISmartByCoordinate(coordinate string) (response.ISmartResponse, error)
-	GetISmartByCustomerName(customerName string) (response.ISmartResponse, error)
 	GetISmartByFiberNode(fiberNode string) (response.ISmartResponse, error)
 	GetISmartByStreet(street string) (response.ISmartResponse, error)
 	GetISmartsWithFilters(filters map[string]interface{}) ([]response.ISmartResponse, error)

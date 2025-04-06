@@ -8,15 +8,14 @@ import (
 )
 
 type ISmart struct {
-	ID           string `gorm:"type:varchar(36);primaryKey" json:"id"`
-	FiberNode    string `json:"fiber_node"`
-	Address      string `json:"address"`
-	CustomerName string `json:"customer_name"`
-	Coordinate   string `json:"coordinate"`
-	Street       string `json:"street"`
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
-	DeletedAt    *time.Time `gorm:"index"`
+	ID         string `gorm:"type:varchar(36);primaryKey" json:"id"`
+	FiberNode  string `json:"fiber_node"`
+	Address    string `json:"address"`
+	Coordinate string `json:"coordinate"`
+	Street     string `json:"street"`
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
+	DeletedAt  *time.Time `gorm:"index"`
 }
 
 func (i *ISmart) BeforeCreate(tx *gorm.DB) error {

@@ -145,7 +145,6 @@ type ISmartRepo interface {
 	GetISmartByID(id string) (models.ISmart, error)
 	GetISmartByFiberNode(fiberNode string) (models.ISmart, error)
 	GetISmartByAddress(address string) (models.ISmart, error)
-	GetISmartByCustomerName(customerName string) (models.ISmart, error)
 	GetISmartByCoordinate(coordinate string) (models.ISmart, error)
 	GetISmartByStreet(street string) (models.ISmart, error)
 
