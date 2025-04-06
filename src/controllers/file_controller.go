@@ -5,7 +5,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"time"
 
 	"github.com/cocoth/linknet-api/src/controllers/helper"
 	"github.com/cocoth/linknet-api/src/http/request"
@@ -145,6 +144,20 @@ func (f *FileController) UpdateFileUpload(c *gin.Context) {
 	var file response.FileUploadResponse
 	var err error
 
+	token, exsist := c.Get("current_user")
+	if !exsist {
+		helper.RespondWithError(c, http.StatusUnauthorized, "No token provided")
+		return
+	}
+	currentResUser := token.(response.UserResponse)
+
+	if currentResUser.ID != fileReq.AuthorID {
+		if currentResUser.Role.Name != "admin" {
+			helper.RespondWithError(c, http.StatusUnauthorized, "only admin or the file owner can update the file!")
+			return
+		}
+	}
+
 	qFileID := c.Param("id")
 
 	file, err = f.fileService.GetFileUploadByFileID(qFileID)
@@ -167,28 +180,6 @@ func (f *FileController) UpdateFileUpload(c *gin.Context) {
 	existingFile, err := f.fileService.GetFileUploadByFileHash(hash)
 	if err == nil && existingFile != (response.FileUploadResponse{}) && existingFile.ID != file.ID {
 		helper.RespondWithError(c, 400, "File already exists in the database")
-		return
-	}
-
-	token, err := c.Cookie("session_token")
-	if err != nil {
-		helper.RespondWithError(c, http.StatusUnauthorized, "No token provided")
-		return
-	}
-
-	exp, userId, err := utils.ValidateJWTToken(token)
-	if err != nil {
-		helper.RespondWithError(c, http.StatusUnauthorized, "Invalid token")
-		return
-	}
-
-	userRes, err := f.userService.GetUserById(userId)
-	if err != nil {
-		helper.RespondWithError(c, http.StatusUnauthorized, "Unauthorized")
-		return
-	}
-	if float64(time.Now().Unix()) > exp {
-		helper.RespondWithError(c, http.StatusUnauthorized, "Token Expired")
 		return
 	}
 
@@ -230,7 +221,7 @@ func (f *FileController) UpdateFileUpload(c *gin.Context) {
 	fileReq.FileType = http.DetectContentType(buffer)
 	fileReq.FileUri = filePath
 	fileReq.FileHash = fileHash
-	fileReq.AuthorID = userRes.ID
+	fileReq.AuthorID = currentResUser.ID
 
 	file, err = f.fileService.UpdateFileUpload(file.ID, fileReq)
 	if err != nil {
