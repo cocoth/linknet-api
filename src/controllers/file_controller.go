@@ -281,20 +281,22 @@ func (f *FileController) DownloadFile(c *gin.Context) {
 	}
 
 	fileExtension := strings.ToLower(strings.Split(file.FileName, ".")[len(strings.Split(file.FileName, "."))-1])
-	if fileExtension == "pdf" || fileExtension == "kmz" {
+	if currentResUser.Role.Name != "admin" {
+		if fileExtension == "pdf" || fileExtension == "kmz" {
 
-		hasAccess, err := f.filePermService.CheckAccess(request.FilePermRequest{
-			UserID: currentResUser.ID,
-			FileID: qFileID,
-		})
+			hasAccess, err := f.filePermService.CheckAccess(request.FilePermRequest{
+				UserID: currentResUser.ID,
+				FileID: qFileID,
+			})
 
-		if err != nil {
-			helper.RespondWithError(c, http.StatusInternalServerError, err.Error())
-			return
-		}
-		if !hasAccess {
-			helper.RespondWithError(c, http.StatusForbidden, "You do not have access to this file")
-			return
+			if err != nil {
+				helper.RespondWithError(c, http.StatusInternalServerError, err.Error())
+				return
+			}
+			if !hasAccess {
+				helper.RespondWithError(c, http.StatusForbidden, "You do not have access to this file")
+				return
+			}
 		}
 	}
 
