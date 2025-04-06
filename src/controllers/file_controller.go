@@ -100,7 +100,6 @@ func (f *FileController) UploadFile(c *gin.Context) {
 		return
 	}
 	helper.RespondWithSuccess(c, http.StatusOK, fileRes)
-
 }
 
 func (f *FileController) GetAllFileUpload(c *gin.Context) {
@@ -151,21 +150,24 @@ func (f *FileController) UpdateFileUpload(c *gin.Context) {
 	}
 	currentResUser := token.(response.UserResponse)
 
-	if currentResUser.ID != fileReq.AuthorID {
-		helper.RespondWithError(c, http.StatusUnauthorized, "only admin or the file owner can update the file!")
-		return
-	}
-
-	if currentResUser.Role.Name != "admin" {
-		helper.RespondWithError(c, http.StatusUnauthorized, "only admin or the file owner can update the file!")
-		return
-	}
-
 	qFileID := c.Param("id")
 
 	file, err = f.fileService.GetFileUploadByFileID(qFileID)
 	if err != nil {
 		helper.RespondWithError(c, http.StatusNotFound, "File not found")
+		return
+	}
+
+	var idf string
+	if file.AuthorID != nil {
+		idf = *file.AuthorID
+	} else {
+		helper.RespondWithError(c, http.StatusUnauthorized, "File author ID is missing")
+		return
+	}
+
+	if currentResUser.ID != idf && currentResUser.Role.Name != "admin" {
+		helper.RespondWithError(c, http.StatusUnauthorized, "only admin or the file owner can update the file!")
 		return
 	}
 
