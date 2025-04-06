@@ -81,18 +81,13 @@ func (u *UserAuthController) Logout(c *gin.Context) {
 	helper.RespondWithSuccess(c, http.StatusOK, "Logged out")
 }
 func (u *UserAuthController) Validate(c *gin.Context) {
-	user, exsist := c.Get("user")
-
+	token, exsist := c.Get("current_user")
 	if !exsist {
-		helper.RespondWithError(c, http.StatusUnauthorized, "Unauthorized")
-		return
-	}
-	userRes, err := u.authService.Validate(user.(response.UserResponse).ID)
-
-	if err != nil {
-		helper.RespondWithError(c, http.StatusUnauthorized, err.Error())
+		helper.RespondWithError(c, http.StatusUnauthorized, "No token provided")
 		return
 	}
 
-	helper.RespondWithSuccess(c, http.StatusOK, userRes)
+	currentResUser := token.(response.UserResponse)
+
+	helper.RespondWithSuccess(c, http.StatusOK, currentResUser)
 }
