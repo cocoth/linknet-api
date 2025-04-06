@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/cocoth/linknet-api/src/controllers/helper"
 	"github.com/cocoth/linknet-api/src/http/request"
@@ -252,20 +253,6 @@ func (f *FileController) DownloadFile(c *gin.Context) {
 	}
 	currentResUser := token.(response.UserResponse)
 
-	hasAccess, err := f.filePermService.CheckAccess(request.FilePermRequest{
-		UserID: currentResUser.ID,
-		FileID: qFileID,
-	})
-
-	if err != nil {
-		helper.RespondWithError(c, http.StatusInternalServerError, err.Error())
-		return
-	}
-	if !hasAccess {
-		helper.RespondWithError(c, http.StatusForbidden, "You do not have access to this file")
-		return
-	}
-
 	if qFileID != "" {
 		file, err = f.fileService.GetFileUploadByFileID(qFileID)
 		if err != nil {
@@ -291,6 +278,24 @@ func (f *FileController) DownloadFile(c *gin.Context) {
 	if _, err := os.Stat(file.FileUri); os.IsNotExist(err) {
 		helper.RespondWithError(c, http.StatusNotFound, "File not found on server")
 		return
+	}
+
+	fileExtension := strings.ToLower(strings.Split(file.FileName, ".")[len(strings.Split(file.FileName, "."))-1])
+	if fileExtension == "pdf" || fileExtension == "kmz" {
+
+		hasAccess, err := f.filePermService.CheckAccess(request.FilePermRequest{
+			UserID: currentResUser.ID,
+			FileID: qFileID,
+		})
+
+		if err != nil {
+			helper.RespondWithError(c, http.StatusInternalServerError, err.Error())
+			return
+		}
+		if !hasAccess {
+			helper.RespondWithError(c, http.StatusForbidden, "You do not have access to this file")
+			return
+		}
 	}
 
 	c.Header("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate")
