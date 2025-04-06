@@ -294,15 +294,15 @@ func (f *FileController) DeleteFileUpload(c *gin.Context) {
 	}
 	currentResUser := token.(response.UserResponse)
 
-	file, err = f.fileService.GetFileUploadByFileID(qFileID)
+	existingFile, err := f.fileService.GetFileUploadByFileID(qFileID)
 	if err != nil {
 		helper.RespondWithError(c, http.StatusNotFound, "File not found")
 		return
 	}
 
 	var idf string
-	if file.AuthorID != nil {
-		idf = *file.AuthorID
+	if existingFile.AuthorID != nil {
+		idf = *existingFile.AuthorID
 	} else {
 		helper.RespondWithError(c, http.StatusUnauthorized, "File author ID is missing")
 		return
