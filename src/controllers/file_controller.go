@@ -305,7 +305,6 @@ func (f *FileController) DownloadFile(c *gin.Context) {
 	c.Header("Content-Disposition", fmt.Sprintf("inline; filename=\"%s\"", file.FileName))
 	c.Header("Content-Type", file.FileType)
 	c.File(file.FileUri)
-
 }
 
 func (f *FileController) DeleteFileUpload(c *gin.Context) {

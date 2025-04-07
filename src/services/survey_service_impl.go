@@ -86,6 +86,34 @@ func sendSurveysResponse(surveyModel []models.Survey, err error) ([]response.Sur
 
 }
 
+// ViewSurveyAndReportsByID implements SurveyService.
+func (s *SurveyServiceImpl) ViewSurveyAndReportsByID(id string) (response.SurveyReportView, error) {
+	survey, err := s.surveyRepo.ViewSurveyAndReportsByID(id)
+	if err != nil {
+		return response.SurveyReportView{}, err
+	}
+
+	var surveyors []string
+	for _, surveyor := range survey.Surveyors {
+		if surveyor.Surveyor.Name != "" {
+			surveyors = append(surveyors, surveyor.Surveyor.Name)
+		} else {
+			surveyors = append(surveyors, surveyor.Surveyor.CallSign)
+		}
+	}
+
+	return response.SurveyReportView{
+		FormNumber:   survey.FormNumber,
+		CustomerName: survey.CustomerName,
+		Address:      survey.Address,
+		NodeFDT:      survey.NodeFDT,
+		SurveyDate:   survey.SurveyDate,
+		Status:       survey.SurveyReport.Status,
+		Remark:       survey.SurveyReport.Remark,
+		Surveyors:    surveyors,
+	}, nil
+}
+
 // GetSurveysWithFilters implements SurveyService.
 func (s *SurveyServiceImpl) GetSurveysWithFilters(filters map[string]interface{}) ([]response.SurveyResponse, error) {
 	survey, err := s.surveyRepo.GetSurveysWithFilters(filters)

@@ -11,6 +11,17 @@ type SurveyRepoImpl struct {
 	db *gorm.DB
 }
 
+// ViewSurveyAndReportsByID implements SurveyRepo.
+func (s *SurveyRepoImpl) ViewSurveyAndReportsByID(id string) (models.Survey, error) {
+	var survey models.Survey
+
+	err := s.db.Preload("SurveyReport").Preload("Surveyors.Surveyor").Where("id = ?", id).Find(&survey).Error
+	if err != nil {
+		return models.Survey{}, err
+	}
+	return survey, nil
+}
+
 // GetUsersWithFilters implements SurveyRepo.
 func (s *SurveyRepoImpl) GetSurveysWithFilters(filters map[string]interface{}) ([]models.Survey, error) {
 	var surveys []models.Survey

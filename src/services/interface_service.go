@@ -71,8 +71,6 @@ type FileUploadPermService interface {
 	ApproveFileAccess(request request.FilePermRequest) error
 	RejectFileAccess(request request.FilePermRequest) error
 	CheckAccess(request request.FilePermRequest) (bool, error)
-
-	// GetAllFileUploadPerm() ([]response.FileUploadPermResponse, error)
 }
 
 type SurveyService interface {
@@ -88,6 +86,8 @@ type SurveyService interface {
 	GetSurveyBySurveyDate(surveyDate time.Time) (response.SurveyResponse, error)
 	GetSurveyBySurveyorID(surveyorID string) (response.SurveyResponse, error)
 	GetSurveyByImageID(imageID string) (response.SurveyResponse, error)
+
+	ViewSurveyAndReportsByID(id string) (response.SurveyReportView, error)
 
 	GetSurveysWithFilters(filters map[string]interface{}) ([]response.SurveyResponse, error)
 

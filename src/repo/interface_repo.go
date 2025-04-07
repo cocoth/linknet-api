@@ -95,6 +95,8 @@ type SurveyRepo interface {
 	GetSurveyBySurveyorID(surveyorID string) (models.Survey, error)
 	GetSurveyByImageID(imageID string) (models.Survey, error)
 
+	ViewSurveyAndReportsByID(id string) (models.Survey, error)
+
 	GetSurveysWithFilters(filters map[string]interface{}) ([]models.Survey, error)
 
 	GetSurveysByTitle(title string) ([]models.Survey, error)

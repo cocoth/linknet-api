@@ -28,6 +28,17 @@ type SurveyResponse struct {
 	DeletedAt    *time.Time             `json:"DeletedAt"`
 }
 
+type SurveyReportView struct {
+	FormNumber   string    `json:"form_number"`
+	CustomerName string    `json:"customer_name"`
+	Address      string    `json:"address"`
+	NodeFDT      string    `json:"node_fdt"`
+	SurveyDate   time.Time `json:"survey_date"`
+	Status       string    `json:"status"`
+	Remark       string    `json:"remark"`
+	Surveyors    []string  `json:"surveyors"`
+}
+
 type SurveyReportResponse struct {
 	ID        string     `json:"id"`
 	SurveyID  string     `json:"survey_id"`
