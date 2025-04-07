@@ -15,7 +15,7 @@ type SurveyRepoImpl struct {
 func (s *SurveyRepoImpl) ViewSurveyAndReportsByID(id string) (models.Survey, error) {
 	var survey models.Survey
 
-	err := s.db.Preload("SurveyReport").Preload("Surveyors.Surveyor").Where("id = ?", id).Find(&survey).Error
+	err := s.db.Preload("SurveyReport").Preload("Surveyors.Surveyor").Where("id = ?", id).First(&survey).Error
 	if err != nil {
 		return models.Survey{}, err
 	}

@@ -30,6 +30,8 @@ type SurveyResponse struct {
 
 type SurveyReportView struct {
 	FormNumber   string    `json:"form_number"`
+	QuestorName  string    `json:"questor_name"`
+	Fat          string    `json:"fat"`
 	CustomerName string    `json:"customer_name"`
 	Address      string    `json:"address"`
 	NodeFDT      string    `json:"node_fdt"`

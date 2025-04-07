@@ -104,6 +104,8 @@ func (s *SurveyServiceImpl) ViewSurveyAndReportsByID(id string) (response.Survey
 
 	return response.SurveyReportView{
 		FormNumber:   survey.FormNumber,
+		QuestorName:  survey.QuestorName,
+		Fat:          survey.FAT,
 		CustomerName: survey.CustomerName,
 		Address:      survey.Address,
 		NodeFDT:      survey.NodeFDT,
