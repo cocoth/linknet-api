@@ -25,7 +25,6 @@ func (u *UserAuthorization) Authorize(c *gin.Context) {
 	var sessionToken string
 
 	authHeader := c.GetHeader("Authorization")
-	utils.Debug("Auth Header: " + authHeader)
 
 	if authHeader != "" && strings.HasPrefix(authHeader, "Bearer ") {
 		sessionToken = strings.TrimPrefix(authHeader, "Bearer ")

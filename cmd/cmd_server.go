@@ -26,10 +26,8 @@ func StartServer(e *gin.Engine, appHost, appPort string) {
 	env := os.Getenv("APP_ENV")
 
 	if env == "prod" {
+		os.Setenv("GIN_MODE", gin.ReleaseMode)
 		gin.SetMode(gin.ReleaseMode)
-		appHost = "0.0.0.0"
-	} else {
-		appHost = os.Getenv("APP_HOST")
 	}
 
 	serverAddr := appHost + ":" + appPort
