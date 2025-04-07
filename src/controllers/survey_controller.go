@@ -200,7 +200,9 @@ func (s *SurveyController) ViewSurveyAndReportsByID(c *gin.Context) {
 
 	surveyRes, err := s.surveyService.ViewSurveyAndReportsByID(surveyID)
 	if err != nil {
-		if err.Error() == "record not found" {
+		if err.Error() == "no survey report yet!" {
+			helper.RespondWithError(c, http.StatusNotFound, err.Error())
+		} else if err.Error() == "record not found" {
 			helper.RespondWithError(c, http.StatusNotFound, err.Error())
 		} else {
 			helper.RespondWithError(c, http.StatusInternalServerError, err.Error())
@@ -227,7 +229,9 @@ func (s *SurveyController) DownloadSurveyAndReportsByID(c *gin.Context) {
 
 	data, err := s.surveyService.ViewSurveyAndReportsByID(qID)
 	if err != nil {
-		if err.Error() == "record not found" {
+		if err.Error() == "no survey report yet!" {
+			helper.RespondWithError(c, http.StatusNotFound, err.Error())
+		} else if err.Error() == "record not found" {
 			helper.RespondWithError(c, http.StatusNotFound, err.Error())
 		} else {
 			helper.RespondWithError(c, http.StatusInternalServerError, err.Error())

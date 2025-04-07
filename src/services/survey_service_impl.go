@@ -1,6 +1,7 @@
 package services
 
 import (
+	"errors"
 	"time"
 
 	"github.com/cocoth/linknet-api/src/http/request"
@@ -91,6 +92,10 @@ func (s *SurveyServiceImpl) ViewSurveyAndReportsByID(id string) (response.Survey
 	survey, err := s.surveyRepo.ViewSurveyAndReportsByID(id)
 	if err != nil {
 		return response.SurveyReportView{}, err
+	}
+
+	if survey.SurveyReport == nil {
+		return response.SurveyReportView{}, errors.New("no survey report yet!")
 	}
 
 	var surveyors []string
