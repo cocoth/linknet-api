@@ -16,7 +16,7 @@ func UserRoute(authMiddleware *middlewares.UserAuthorization, ctrl *controllers.
 	// Update Existing user
 	rg.PATCH("/user/:id", authMiddleware.Authorize, ctrl.UpdateUser)
 	// Delete user
-	rg.DELETE("/user/:id", ctrl.DeleteUser)
+	rg.DELETE("/user/:id", authMiddleware.Authorize, ctrl.DeleteUser)
 
 	// Get all roles
 	rg.GET("/user/roles", authMiddleware.Authorize, ctrl.GetAllRole)

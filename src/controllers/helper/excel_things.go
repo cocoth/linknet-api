@@ -60,7 +60,7 @@ func GenerateSurveyExcel(data response.SurveyReportView) ([]byte, error) {
 	f.SetCellValue(sheet, "D"+strconv.Itoa(row), data.CustomerName)
 	f.SetCellValue(sheet, "E"+strconv.Itoa(row), data.Address)
 	f.SetCellValue(sheet, "F"+strconv.Itoa(row), data.NodeFDT)
-	f.SetCellValue(sheet, "G"+strconv.Itoa(row), data.SurveyDate.Format("2006-01-02")) // Format tanggal
+	f.SetCellValue(sheet, "G"+strconv.Itoa(row), data.SurveyDate.Format("02/01/2006 15:04:05")) // Format tanggal
 	f.SetCellValue(sheet, "H"+strconv.Itoa(row), data.Status)
 	f.SetCellValue(sheet, "I"+strconv.Itoa(row), data.Remark)
 	f.SetCellValue(sheet, "J"+strconv.Itoa(row), joinNames(data.Surveyors)) // Corrected field name

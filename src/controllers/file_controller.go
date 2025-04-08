@@ -5,7 +5,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"strings"
 
 	"github.com/cocoth/linknet-api/src/controllers/helper"
 	"github.com/cocoth/linknet-api/src/http/request"
@@ -246,12 +245,12 @@ func (f *FileController) DownloadFile(c *gin.Context) {
 	qFileName := c.Query("filename")
 	qfileHash := c.Query("filehash")
 
-	token, exsist := c.Get("current_user")
-	if !exsist {
-		helper.RespondWithError(c, http.StatusUnauthorized, "No token provided")
-		return
-	}
-	currentResUser := token.(response.UserResponse)
+	// token, exsist := c.Get("current_user")
+	// if !exsist {
+	// 	helper.RespondWithError(c, http.StatusUnauthorized, "No token provided")
+	// 	return
+	// }
+	// currentResUser := token.(response.UserResponse)
 
 	if qFileID != "" {
 		file, err = f.fileService.GetFileUploadByFileID(qFileID)
@@ -280,25 +279,25 @@ func (f *FileController) DownloadFile(c *gin.Context) {
 		return
 	}
 
-	fileExtension := strings.ToLower(strings.Split(file.FileName, ".")[len(strings.Split(file.FileName, "."))-1])
-	if currentResUser.Role.Name != "admin" {
-		if fileExtension == "pdf" || fileExtension == "kmz" {
+	// fileExtension := strings.ToLower(strings.Split(file.FileName, ".")[len(strings.Split(file.FileName, "."))-1])
+	// if currentResUser.Role.Name != "admin" {
+	// 	if fileExtension == "pdf" || fileExtension == "kmz" {
 
-			hasAccess, err := f.filePermService.CheckAccess(request.FilePermRequest{
-				UserID: currentResUser.ID,
-				FileID: qFileID,
-			})
+	// 		hasAccess, err := f.filePermService.CheckAccess(request.FilePermRequest{
+	// 			UserID: currentResUser.ID,
+	// 			FileID: qFileID,
+	// 		})
 
-			if err != nil {
-				helper.RespondWithError(c, http.StatusInternalServerError, err.Error())
-				return
-			}
-			if !hasAccess {
-				helper.RespondWithError(c, http.StatusForbidden, "You do not have access to this file")
-				return
-			}
-		}
-	}
+	// 		if err != nil {
+	// 			helper.RespondWithError(c, http.StatusInternalServerError, err.Error())
+	// 			return
+	// 		}
+	// 		if !hasAccess {
+	// 			helper.RespondWithError(c, http.StatusForbidden, "You do not have access to this file")
+	// 			return
+	// 		}
+	// 	}
+	// }
 
 	c.Header("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate")
 	// c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", file.FileName))
