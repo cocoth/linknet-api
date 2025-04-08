@@ -227,7 +227,7 @@ func InitializeAndRunServer() {
 	authMiddleware := middlewares.NewUserAuthorization(userService)
 
 	userCtrl := controllers.NewUserController(userService)
-	authCtrl := controllers.NewAuthController(authService)
+	authCtrl := controllers.NewAuthController(authService, userService)
 	fileCtrl := controllers.NewFileController(fileUploadService, filePermService, userService)
 	surveyCtrl := controllers.NewSurveyController(surveyService, userService)
 	reportCtrl := controllers.NewSurveyReportController(surveyReportService, userService)

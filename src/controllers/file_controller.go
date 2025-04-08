@@ -398,20 +398,30 @@ func (f *FileController) RequestAccess(c *gin.Context) {
 		return
 	}
 
-	errReq := f.filePermService.RequestAccess(filePermission)
+	perm, errReq := f.filePermService.RequestAccess(filePermission)
 	if errReq != nil {
 		helper.RespondWithError(c, http.StatusInternalServerError, errReq.Error())
 		return
 	}
 
+	file, err := f.fileService.GetFileUploadByFileID(filePermission.FileID)
+	if err != nil {
+		helper.RespondWithError(c, http.StatusNotFound, "File not found")
+		return
+	}
+
 	for _, adminUser := range admin {
 		notify := response.NotifyResponse{
+			ID:            perm.ID,
 			UserID:        currentResUser.ID,
 			FileID:        filePermission.FileID,
 			NotifyStatus:  "pending",
 			NotifyType:    "File-Access-Request",
-			NotifyMessage: fmt.Sprintf("User: %s requested access to file: %s", currentResUser.Name, filePermission.FileID),
+			NotifyMessage: fmt.Sprintf("User: %s requested access to file: %s", currentResUser.Name, file.FileName),
 			IsRead:        false,
+			CreatedAt:     perm.CreatedAt,
+			UpdatedAt:     perm.UpdatedAt,
+			DeletedAt:     perm.DeletedAt,
 		}
 		SendNotification(adminUser.ID, notify)
 	}
@@ -439,19 +449,42 @@ func (f *FileController) ApproveAccess(c *gin.Context) {
 		return
 	}
 
-	errReq := f.filePermService.ApproveFileAccess(filePermission)
+	perm, errReq := f.filePermService.ApproveFileAccess(filePermission)
 	if errReq != nil {
 		helper.RespondWithError(c, http.StatusInternalServerError, errReq.Error())
 		return
 	}
 
+	file, err := f.fileService.GetFileUploadByFileID(filePermission.FileID)
+	if err != nil {
+		helper.RespondWithError(c, http.StatusNotFound, "File not found")
+		return
+	}
+
 	notify := response.NotifyResponse{
+		ID:            perm.ID,
 		UserID:        currentResUser.ID,
 		FileID:        filePermission.FileID,
 		NotifyStatus:  "approved",
 		NotifyType:    "File-Access-Approved",
-		NotifyMessage: fmt.Sprintf("Your request to access file: %s has been approved", filePermission.FileID),
+		NotifyMessage: fmt.Sprintf("Your request to access file: %s has been approved", file.FileName),
 		IsRead:        false,
+		CreatedAt:     perm.CreatedAt,
+		UpdatedAt:     perm.UpdatedAt,
+		DeletedAt:     perm.DeletedAt,
+	}
+	admin, err := f.userService.GetAdmins()
+	if err != nil {
+		helper.RespondWithError(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	if len(admin) == 0 {
+		helper.RespondWithError(c, http.StatusInternalServerError, "No admin found")
+		return
+	}
+
+	for _, adminUser := range admin {
+		SendNotification(adminUser.ID, notify)
 	}
 	SendNotification(filePermission.UserID, notify)
 	helper.RespondWithSuccess(c, http.StatusOK, "Access Approved")
@@ -477,19 +510,45 @@ func (f *FileController) RejectAccess(c *gin.Context) {
 		return
 	}
 
-	errReq := f.filePermService.RejectFileAccess(filePermission)
+	perm, errReq := f.filePermService.RejectFileAccess(filePermission)
 	if errReq != nil {
 		helper.RespondWithError(c, http.StatusInternalServerError, errReq.Error())
 		return
 	}
+
+	file, err := f.fileService.GetFileUploadByFileID(filePermission.FileID)
+	if err != nil {
+		helper.RespondWithError(c, http.StatusNotFound, "File not found")
+		return
+	}
+
 	notify := response.NotifyResponse{
+		ID:            perm.ID,
 		UserID:        currentResUser.ID,
 		FileID:        filePermission.FileID,
 		NotifyStatus:  "rejected",
 		NotifyType:    "File-Access-Approved",
-		NotifyMessage: fmt.Sprintf("Your request to access file: %s has been rejected", filePermission.FileID),
+		NotifyMessage: fmt.Sprintf("Your request to access file: %s has been rejected", file.FileName),
 		IsRead:        false,
+		CreatedAt:     perm.CreatedAt,
+		UpdatedAt:     perm.UpdatedAt,
+		DeletedAt:     perm.DeletedAt,
 	}
+
+	admin, err := f.userService.GetAdmins()
+	if err != nil {
+		helper.RespondWithError(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	if len(admin) == 0 {
+		helper.RespondWithError(c, http.StatusInternalServerError, "No admin found")
+		return
+	}
+
+	for _, adminUser := range admin {
+		SendNotification(adminUser.ID, notify)
+	}
+
 	SendNotification(filePermission.UserID, notify)
 	helper.RespondWithSuccess(c, http.StatusOK, "Access Rejected")
 }

@@ -281,7 +281,7 @@ func (u *UsersServiceImpl) IsAdmin(token string) (status bool, userResponse resp
 		return false, user, errors.New("unauthorized")
 	}
 	if userResponse.Role.Name != "admin" {
-		return false, user, errors.New("only admin can access user")
+		return false, user, errors.New("only admin can this resource")
 	}
 	return true, userResponse, nil
 }

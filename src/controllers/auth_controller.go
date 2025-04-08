@@ -14,11 +14,13 @@ import (
 
 type UserAuthController struct {
 	authService services.UserAuthService
+	userService services.UserService
 }
 
-func NewAuthController(service services.UserAuthService) *UserAuthController {
+func NewAuthController(service services.UserAuthService, userService services.UserService) *UserAuthController {
 	return &UserAuthController{
 		authService: service,
+		userService: userService,
 	}
 }
 
@@ -90,4 +92,42 @@ func (u *UserAuthController) Validate(c *gin.Context) {
 	currentResUser := token.(response.UserResponse)
 
 	helper.RespondWithSuccess(c, http.StatusOK, currentResUser)
+}
+
+func (u *UserAuthController) CheckIsAdmin(c *gin.Context) {
+	var createReq request.LoginUserRequest
+
+	if err := c.ShouldBindJSON(&createReq); err != nil {
+		helper.RespondWithError(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	userRes, err := u.authService.Login(createReq)
+	if err != nil {
+		if err.Error() == "invalid credentials" {
+			helper.RespondWithError(c, http.StatusUnauthorized, "Invalid credentials")
+		} else if err.Error() == "record not found" {
+			helper.RespondWithError(c, http.StatusUnauthorized, "Invalid credentials")
+		} else {
+			helper.RespondWithError(c, http.StatusInternalServerError, err.Error())
+		}
+		return
+	}
+
+	isadmin, _, err := u.userService.IsAdmin(userRes.SessionToken)
+
+	if err != nil {
+		helper.RespondWithError(c, http.StatusForbidden, err.Error())
+		return
+	}
+	if !isadmin {
+		helper.RespondWithError(c, http.StatusForbidden, "You are not authorized to access this resource")
+		return
+	}
+
+	sessionToken := userRes.SessionToken
+	domain := os.Getenv("APP_DOMAIN")
+
+	c.SetCookie("session_token", sessionToken, int((24 * time.Hour).Seconds()), "/", domain, false, true)
+	helper.RespondWithSuccess(c, http.StatusOK, userRes)
 }

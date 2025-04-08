@@ -11,7 +11,7 @@ build-linux: $(BUILD_DIR)
 	rm -rf $(BUILD_DIR)/*
 	@echo "Building $(APP_NAME) for Linux..."
 	cp .env $(BUILD_DIR)
-	cp -r ./config/* $(BUILD_DIR)
+	cp -r ./config $(BUILD_DIR)
 	GOOS=linux GOARCH=amd64 go build -C src -o $(BUILD_DIR)/$(APP_NAME)
 
 build-win: $(BUILD_DIR)
@@ -19,7 +19,7 @@ build-win: $(BUILD_DIR)
 	rm -rf $(BUILD_DIR)/*
 	@echo "Building $(APP_NAME) for Windows..."
 	cp .env $(BUILD_DIR)
-	cp -r ./config/* $(BUILD_DIR)
+	cp -r ./config $(BUILD_DIR)
 	GOOS=windows GOARCH=amd64 go build -C src -o $(BUILD_DIR)/$(APP_NAME).exe
 
 clean:

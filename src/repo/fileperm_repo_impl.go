@@ -10,17 +10,43 @@ type filePermRepoImpl struct {
 }
 
 // RejctAccess implements FilePermRepo.
-func (f *filePermRepoImpl) RejectAccess(userID string, fileID string) error {
+func (f *filePermRepoImpl) RejectAccess(userID string, fileID string) (models.FileAccessRequest, error) {
 	var perm models.FileAccessRequest
+	err := f.db.Model(&perm).
+		Where("user_id = ? AND file_id = ?", userID, fileID).
+		Updates(map[string]interface{}{
+			"approved": false,
+		}).Error
+	if err != nil {
+		return models.FileAccessRequest{}, err
+	}
 
-	return f.db.Model(&perm).Where("user_id = ? AND file_id = ?", userID, fileID).Update("approved", false).Error
+	errUpdate := f.db.Model(&perm).Where("user_id = ? AND file_id = ?", userID, fileID).Update("approved", false).Error
+	if errUpdate != nil {
+		return models.FileAccessRequest{}, errUpdate
+	}
+	return perm, nil
 }
 
 // ApproveAccess implements FilePermRepo.
-func (f *filePermRepoImpl) ApproveAccess(userID string, fileID string) error {
+func (f *filePermRepoImpl) ApproveAccess(userID string, fileID string) (models.FileAccessRequest, error) {
 	var perm models.FileAccessRequest
 
-	return f.db.Model(&perm).Where("user_id = ? AND file_id = ?", userID, fileID).Update("approved", true).Error
+	// Update status approved
+	err := f.db.Model(&perm).
+		Where("user_id = ? AND file_id = ?", userID, fileID).
+		Updates(map[string]interface{}{
+			"approved": true,
+		}).Error
+	if err != nil {
+		return models.FileAccessRequest{}, err
+	}
+
+	errUpdate := f.db.Model(&perm).Where("user_id = ? AND file_id = ?", userID, fileID).First(&perm).Error
+	if errUpdate != nil {
+		return models.FileAccessRequest{}, errUpdate
+	}
+	return perm, nil
 }
 
 // CheckAccess implements FilePermRepo.
@@ -39,7 +65,7 @@ func (f *filePermRepoImpl) CheckAccess(userID string, fileID string) (bool, erro
 }
 
 // RequestAccess implements FilePermRepo.
-func (f *filePermRepoImpl) RequestAccess(userID string, fileID string) error {
+func (f *filePermRepoImpl) RequestAccess(userID string, fileID string) (models.FileAccessRequest, error) {
 	var perm models.FileAccessRequest
 
 	// Check if the record exists
@@ -52,15 +78,17 @@ func (f *filePermRepoImpl) RequestAccess(userID string, fileID string) error {
 				FileID:   fileID,
 				Approved: false,
 			}
-			return f.db.Create(&perm).Error
+			err = f.db.Create(&perm).Error
+			return perm, err
 		}
 		// Return other errors
-		return err
+		return models.FileAccessRequest{}, err
 	}
 
 	// Update the existing record
 	perm.Approved = false
-	return f.db.Save(&perm).Error
+	err = f.db.Save(&perm).Error
+	return perm, err
 }
 
 func NewFilePermRepoImpl(db *gorm.DB) FilePermRepo {

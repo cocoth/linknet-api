@@ -74,9 +74,9 @@ type FileUploadRepo interface {
 }
 
 type FilePermRepo interface {
-	RequestAccess(userID, fileID string) error
-	ApproveAccess(userID, fileID string) error
-	RejectAccess(userID, fileID string) error
+	RequestAccess(userID, fileID string) (models.FileAccessRequest, error)
+	ApproveAccess(userID, fileID string) (models.FileAccessRequest, error)
+	RejectAccess(userID, fileID string) (models.FileAccessRequest, error)
 	CheckAccess(userID, fileID string) (bool, error)
 }
 

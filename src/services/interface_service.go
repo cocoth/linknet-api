@@ -67,9 +67,9 @@ type FileUploadService interface {
 }
 
 type FileUploadPermService interface {
-	RequestAccess(request request.FilePermRequest) error
-	ApproveFileAccess(request request.FilePermRequest) error
-	RejectFileAccess(request request.FilePermRequest) error
+	RequestAccess(request request.FilePermRequest) (response.FilePermResponse, error)
+	ApproveFileAccess(request request.FilePermRequest) (response.FilePermResponse, error)
+	RejectFileAccess(request request.FilePermRequest) (response.FilePermResponse, error)
 	CheckAccess(request request.FilePermRequest) (bool, error)
 }
 

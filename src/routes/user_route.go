@@ -37,6 +37,8 @@ func AuthRoute(authMiddleware *middlewares.UserAuthorization, ctrl *controllers.
 	rg.POST("/logout", ctrl.Logout)
 	// Validate token
 	rg.GET("/validate", authMiddleware.Authorize, ctrl.Validate)
+	// Validate Admin
+	rg.POST("/isadmin", ctrl.CheckIsAdmin)
 }
 
 func FileRoute(authMiddleware *middlewares.UserAuthorization, ctrl *controllers.FileController, rg *gin.RouterGroup) {
