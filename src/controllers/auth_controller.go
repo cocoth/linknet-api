@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"time"
@@ -76,11 +77,32 @@ func (u *UserAuthController) Login(c *gin.Context) {
 }
 
 func (u *UserAuthController) Logout(c *gin.Context) {
+	sessionToken, err := c.Cookie("session_token")
+	if err != nil {
+		helper.RespondWithError(c, http.StatusBadRequest, "No session token provided")
+		return
+	}
+
+	if sessionToken == "" {
+		helper.RespondWithError(c, http.StatusBadRequest, "No session token provided")
+		return
+	}
+
+	err = u.authService.Logout(sessionToken)
+	if err != nil {
+		if err.Error() == "record not found" {
+			helper.RespondWithError(c, http.StatusUnauthorized, "Invalid credentials")
+		} else {
+			helper.RespondWithError(c, http.StatusInternalServerError, "Failed to log out")
+		}
+		return
+	}
+
 	domain := os.Getenv("APP_DOMAIN")
 	c.SetCookie("csrf_token", "", -1, "/", domain, false, false)
 	c.SetCookie("session_token", "", -1, "/", domain, false, true)
 
-	helper.RespondWithSuccess(c, http.StatusOK, "Logged out")
+	helper.RespondWithSuccess(c, http.StatusOK, "Logged out successfully")
 }
 func (u *UserAuthController) Validate(c *gin.Context) {
 	token, exsist := c.Get("current_user")
@@ -90,6 +112,23 @@ func (u *UserAuthController) Validate(c *gin.Context) {
 	}
 
 	currentResUser := token.(response.UserResponse)
+
+	helper.RespondWithSuccess(c, http.StatusOK, currentResUser)
+}
+func (u *UserAuthController) ValidateAdmin(c *gin.Context) {
+	token, exsist := c.Get("current_user")
+	if !exsist {
+		helper.RespondWithError(c, http.StatusUnauthorized, "No token provided")
+		return
+	}
+
+	currentResUser := token.(response.UserResponse)
+	fmt.Println("currentResUser: ", currentResUser.Role.Name)
+
+	if currentResUser.Role.Name != "admin" {
+		helper.RespondWithError(c, http.StatusForbidden, "only admin can access this resource!")
+		return
+	}
 
 	helper.RespondWithSuccess(c, http.StatusOK, currentResUser)
 }

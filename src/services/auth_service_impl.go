@@ -102,6 +102,11 @@ func (u *UserAuthServiceImpl) Login(users request.LoginUserRequest) (response.Lo
 	token := utils.GenerateJWTToken(user.ID)
 	csrfToken := utils.GenerateCSRFToken(32)
 
+	_, err = u.UserRepo.SetLoginSessionToken(user.ID, token)
+	if err != nil {
+		return response.LoginUserResponse{}, err
+	}
+
 	return response.LoginUserResponse{
 		ID:           user.ID,
 		SessionToken: token,
@@ -110,7 +115,21 @@ func (u *UserAuthServiceImpl) Login(users request.LoginUserRequest) (response.Lo
 }
 
 // Logout implements UserAuth.
-func (u *UserAuthServiceImpl) Logout(users request.LogoutUserRequest) error {
+func (u *UserAuthServiceImpl) Logout(token string) error {
+	user, err := u.UserRepo.GetSessionTokenByToken(token)
+	if err != nil {
+		return err
+	}
+
+	if user.ID == "" {
+		return errors.New("user not found")
+	}
+
+	err = u.UserRepo.InvalidateSessionToken(user.ID)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

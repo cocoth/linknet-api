@@ -12,12 +12,12 @@ import (
 )
 
 type UserAuthorization struct {
-	authService services.UserService
+	userService services.UserService
 }
 
 func NewUserAuthorization(service services.UserService) *UserAuthorization {
 	return &UserAuthorization{
-		authService: service,
+		userService: service,
 	}
 }
 
@@ -38,7 +38,7 @@ func (u *UserAuthorization) Authorize(c *gin.Context) {
 		}
 	}
 
-	exp, userId, err := utils.ValidateJWTToken(sessionToken)
+	exp, _, err := utils.ValidateJWTToken(sessionToken)
 
 	if err != nil {
 		helper.RespondWithError(c, 401, "Invalid Token")
@@ -52,7 +52,7 @@ func (u *UserAuthorization) Authorize(c *gin.Context) {
 		return
 	}
 
-	user, err := u.authService.GetUserById(userId)
+	user, err := u.userService.GetUserBySessionToken(sessionToken)
 	if err != nil {
 		helper.RespondWithError(c, 401, "Unauthorized")
 		c.Abort()
@@ -60,7 +60,6 @@ func (u *UserAuthorization) Authorize(c *gin.Context) {
 	}
 
 	domain := os.Getenv("APP_DOMAIN")
-
 	c.Set("current_user", user)
 	c.SetCookie("session_token", sessionToken, int((24 * time.Hour).Seconds()), "/", domain, false, true)
 

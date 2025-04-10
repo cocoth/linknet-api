@@ -86,6 +86,18 @@ func sendUsersResponse(userModel []models.User, err error) ([]response.UserRespo
 	return users, nil
 }
 
+// GetUserBySessionToken implements UserService.
+func (u *UsersServiceImpl) GetUserBySessionToken(token string) (response.UserResponse, error) {
+	user, err := u.UserRepo.GetSessionTokenByToken(token)
+	return sendUserResponse(user, err)
+}
+
+// SetLoginSessionToken implements UserService.
+func (u *UsersServiceImpl) SetLoginSessionToken(userID string, token string) (response.UserResponse, error) {
+	user, err := u.UserRepo.SetLoginSessionToken(userID, token)
+	return sendUserResponse(user, err)
+}
+
 // GetAdmins implements UserService.
 func (u *UsersServiceImpl) GetAdmins() ([]response.UserResponse, error) {
 	result, err := u.UserRepo.GetAdmins()
@@ -269,6 +281,13 @@ func (u *UsersServiceImpl) DeleteUser(id string) (response.UserResponse, error) 
 func (u *UsersServiceImpl) IsAdmin(token string) (status bool, userResponse response.UserResponse, err error) {
 	var user response.UserResponse
 
+	if _, err := u.UserRepo.GetSessionTokenByToken(token); err != nil {
+		if err.Error() == "session token not found" {
+			return false, user, errors.New("session token not found")
+		}
+		return false, user, errors.New("invalid Token")
+	}
+
 	exp, userId, err := utils.ValidateJWTToken(token)
 	if err != nil {
 		return false, user, errors.New("invalid Token")
@@ -289,6 +308,14 @@ func (u *UsersServiceImpl) IsAdmin(token string) (status bool, userResponse resp
 // CheckToken implements UserService.
 func (u *UsersServiceImpl) CheckToken(token string) (status bool, userResponse response.UserResponse, err error) {
 	var user response.UserResponse
+
+	if _, err := u.UserRepo.GetSessionTokenByToken(token); err != nil {
+		if err.Error() == "session token not found" {
+			return false, user, errors.New("session token not found")
+		}
+		return false, user, errors.New("invalid Token")
+	}
+
 	exp, userId, err := utils.ValidateJWTToken(token)
 	if err != nil {
 		return false, user, errors.New("invalid Token")

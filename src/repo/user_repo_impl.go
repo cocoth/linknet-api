@@ -11,6 +11,43 @@ type userRepoImpl struct {
 	Db *gorm.DB
 }
 
+// SetLoginSessionToken implements UserRepo.
+func (u *userRepoImpl) SetLoginSessionToken(userID, token string) (models.User, error) {
+	var user models.User
+	err := u.Db.Where("id = ?", userID).First(&user).Error
+	if err != nil {
+		return models.User{}, err
+	}
+	user.SessionToken = &token
+	if err := u.Db.Save(&user).Error; err != nil {
+		return models.User{}, err
+	}
+	return user, nil
+}
+
+// GetSessionTokenByToken implements UserRepo.
+func (u *userRepoImpl) GetSessionTokenByToken(token string) (models.User, error) {
+	var user models.User
+	err := u.Db.Preload("Role").Where("session_token = ?", token).First(&user).Error
+	if err != nil {
+		return models.User{}, err
+	}
+	if user.SessionToken == nil {
+		return models.User{}, errors.New("session token not found")
+	}
+	return user, nil
+}
+
+// InvalidateSessionToken implements UserRepo.
+func (u *userRepoImpl) InvalidateSessionToken(userID string) error {
+	var user models.User
+	err := u.Db.Model(&user).Where("id = ?", userID).Update("session_token", nil).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // GetAdmins implements UserRepo.
 func (u *userRepoImpl) GetAdmins() ([]models.User, error) {
 	var users []models.User

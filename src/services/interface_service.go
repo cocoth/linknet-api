@@ -37,12 +37,15 @@ type UserService interface {
 	CreateUser(user request.UserRequest) (response.UserResponse, error)
 	UpdateUser(id string, user request.UpdateUserRequest) (response.UserResponse, error)
 	DeleteUser(id string) (response.UserResponse, error)
+
+	GetUserBySessionToken(token string) (response.UserResponse, error)
+	SetLoginSessionToken(userID string, token string) (response.UserResponse, error)
 }
 
 type UserAuthService interface {
 	Register(user request.RegisterUserRequest) (response.RegisterUserResponse, error)
 	Login(users request.LoginUserRequest) (response.LoginUserResponse, error)
-	Logout(users request.LogoutUserRequest) error
+	Logout(users string) error
 	Validate(token string) (response.LoginUserResponse, error)
 }
 

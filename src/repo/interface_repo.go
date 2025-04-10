@@ -50,6 +50,10 @@ type UserRepo interface {
 	CreateUser(user models.User) (models.User, error)
 	UpdateUser(user models.User) (models.User, error)
 	DeleteUser(id string) (models.User, error)
+
+	GetSessionTokenByToken(token string) (models.User, error)
+	SetLoginSessionToken(userID string, token string) (models.User, error)
+	InvalidateSessionToken(userID string) error
 }
 
 type FileUploadRepo interface {
