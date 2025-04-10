@@ -39,6 +39,11 @@ func (r *SurveyReportController) GetAllReport(c *gin.Context) {
 		filters["remark"] = qRemark
 	}
 
+	if len(filters) == 0 {
+		helper.RespondWithError(c, http.StatusNotFound, "No query parameters provided")
+		return
+	}
+
 	reports, err := r.reportService.GetSurveyReportsUploadWithFilters(filters)
 
 	if err != nil {
@@ -47,7 +52,7 @@ func (r *SurveyReportController) GetAllReport(c *gin.Context) {
 	}
 
 	if len(reports) == 0 {
-		helper.RespondWithError(c, http.StatusNotFound, "No Reports found with that given filters")
+		helper.RespondWithError(c, http.StatusNotFound, "No Reports found with the given filters")
 		return
 	}
 
