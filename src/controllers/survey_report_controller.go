@@ -39,11 +39,6 @@ func (r *SurveyReportController) GetAllReport(c *gin.Context) {
 		filters["remark"] = qRemark
 	}
 
-	if qID == "" && qStatus == "" && qRemark == "" {
-		helper.RespondWithError(c, http.StatusNotFound, "No query parameters provided")
-		return
-	}
-
 	reports, err := r.reportService.GetSurveyReportsUploadWithFilters(filters)
 
 	if err != nil {
