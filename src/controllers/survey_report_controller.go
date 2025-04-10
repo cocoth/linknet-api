@@ -39,7 +39,7 @@ func (r *SurveyReportController) GetAllReport(c *gin.Context) {
 		filters["remark"] = qRemark
 	}
 
-	if len(filters) == 0 {
+	if qID == "" && qStatus == "" && qRemark == "" {
 		helper.RespondWithError(c, http.StatusNotFound, "No query parameters provided")
 		return
 	}
