@@ -2,6 +2,7 @@ package utils
 
 import (
 	"bufio"
+	"encoding/csv"
 	"fmt"
 	"os"
 
@@ -71,4 +72,21 @@ func SaveMultipartFile(fileHandler *multipart.FileHeader) (string, error) {
 	}
 
 	return destPath, nil
+}
+
+// ReadCSVFile reads a comma-delimited CSV file and returns its content as a slice of string slices.
+func ReadCSVFile(filePath string) ([][]string, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+	records, err := reader.ReadAll()
+	if err != nil {
+		return nil, err
+	}
+
+	return records, nil
 }

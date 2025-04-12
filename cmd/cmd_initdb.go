@@ -36,6 +36,7 @@ func InitializeDatabase(db *gorm.DB) {
 	database.DropTables()
 	database.ConnectToDB()
 	database.RoleSeeder()
+	database.ISmartSeeder("config/i-smart.csv")
 
 	email := PromptInput("Enter new admin email")
 
