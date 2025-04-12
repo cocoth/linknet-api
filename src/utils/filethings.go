@@ -76,16 +76,26 @@ func SaveMultipartFile(fileHandler *multipart.FileHeader) (string, error) {
 
 // ReadCSVFile reads a comma-delimited CSV file and returns its content as a slice of string slices.
 func ReadCSVFile(filePath string) ([][]string, error) {
+	// Open the CSV file
 	file, err := os.Open(filePath)
 	if err != nil {
 		return nil, err
 	}
 	defer file.Close()
 
+	// Create a new CSV reader
 	reader := csv.NewReader(file)
-	records, err := reader.ReadAll()
-	if err != nil {
-		return nil, err
+
+	var records [][]string
+	for {
+		record, err := reader.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+		records = append(records, record)
 	}
 
 	return records, nil
