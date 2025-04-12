@@ -85,6 +85,7 @@ func ReadCSVFile(filePath string) ([][]string, error) {
 
 	// Create a new CSV reader
 	reader := csv.NewReader(file)
+	reader.Comma = ';' // Set the delimiter to semicolon
 
 	var records [][]string
 	for {
