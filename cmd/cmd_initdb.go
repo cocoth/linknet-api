@@ -36,7 +36,6 @@ func InitializeDatabase(db *gorm.DB) {
 	database.DropTables()
 	database.ConnectToDB()
 	database.RoleSeeder()
-	database.ISmartSeeder("config/i-smart.csv")
 
 	email := PromptInput("Enter new admin email")
 
@@ -88,6 +87,12 @@ func InitializeDatabase(db *gorm.DB) {
 
 	fmt.Println("Admin user created successfully!")
 	fmt.Println("Please login with email: ", adminDbResult.Email, " and password: ", retypePassword)
+
+	fmt.Println("====================================")
+	fmt.Println("Seeding ISmart data...")
+	fmt.Println("====================================")
+
+	database.ISmartSeeder("config/i-smart.csv")
 
 	time.Sleep(2 * time.Second)
 	InitializeAndRunServer()
